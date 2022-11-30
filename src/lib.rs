@@ -9,10 +9,12 @@
 
 
 pub mod math;
+pub mod storage;
 
 
 /// Contains a re-export of all components and systems defined within this
 /// crate.
 pub mod prelude {
     pub use super::math::*;
+    pub use super::storage::*;
 }
