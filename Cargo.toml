@@ -12,7 +12,9 @@ keywords = ["bevy", "voxel", "world", "plugin"]
 categories = ["games", "game-engines"]
 
 [dependencies]
-bevy = "0.9.0"
+anyhow = "1.0.66"
+bevy = { version = "0.9.0", default-features = false, features = [] }
+serde = "1.0.147"
 
 [dev-dependencies]
 pretty_assertions = "1.3.0"
