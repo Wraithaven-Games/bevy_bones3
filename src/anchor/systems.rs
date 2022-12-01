@@ -22,9 +22,7 @@ pub fn load_chunks<const R: u8, T: BlockData>(
             let center = transform.translation.as_ivec3() >> 4;
             let radius = anchor.radius as f32;
 
-            // TODO: Add movement and looking direction weight to weighted dir.
-            let weighted_dir = Vec3::ZERO;
-            cache.update_weighted_dir(weighted_dir);
+            cache.update_weighted_dir(anchor.weighted_dir);
 
             for chunk_coords in cache.iter(radius, center) {
                 if !world.is_loaded(chunk_coords).unwrap() {

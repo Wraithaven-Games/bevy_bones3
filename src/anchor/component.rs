@@ -6,8 +6,8 @@ use bevy::prelude::*;
 /// itself to stay loaded.
 ///
 /// This component relies on the Position component in order to function.
-#[derive(Debug, Clone, PartialEq, Eq, Reflect, FromReflect, Component, Default)]
-#[reflect(Component, PartialEq)]
+#[derive(Debug, Clone, Reflect, FromReflect, Component, Default)]
+#[reflect(Component)]
 pub struct ChunkAnchor {
     /// The world that this chunk anchor is pinned to.
     pub world: Option<Entity>,
@@ -24,6 +24,19 @@ pub struct ChunkAnchor {
     /// A value of 0 will only allow for a single chunk to be considered within
     /// range of this anchor.
     pub max_radius: u16,
+
+    /// The weighted directional value to apply to this anchor.
+    ///
+    /// This allows for a loading bias to be applied to the chunk loader to
+    /// prioritize loading chunks in a specific direction.
+    ///
+    /// A common example of this might be to prioritize loading chunk in the
+    /// direction an anchor is moving based off it's current velocity, in
+    /// order to ensure that an anchor always stays within loaded chunks.
+    /// Another example might be to add a weighted direction based off the
+    /// direction the camera is facing to prioritize loading chunks that the
+    /// player is looking at.
+    pub weighted_dir: Vec3,
 }
 
 impl ChunkAnchor {
@@ -36,6 +49,7 @@ impl ChunkAnchor {
             world: Some(world),
             radius,
             max_radius,
+            weighted_dir: Vec3::ZERO,
         }
     }
 }
