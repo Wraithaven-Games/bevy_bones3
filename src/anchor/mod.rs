@@ -10,8 +10,6 @@ mod systems;
 pub use component::ChunkAnchor;
 pub use systems::*;
 
-pub use crate::storage::BlockData;
-
 
 #[cfg(test)]
 mod test {
