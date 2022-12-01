@@ -5,11 +5,12 @@
 //! world.
 
 
+use anyhow::{anyhow, bail, Result};
+use bevy::prelude::*;
+
 use super::sector::VoxelSector;
 use super::voxel::{ChunkLoad, VoxelStorage};
 use super::BlockData;
-use anyhow::{anyhow, bail, Result};
-use bevy::prelude::*;
 
 
 /// A marker component indicating the parent entity of a voxel world.
@@ -33,7 +34,6 @@ impl<T: BlockData> VoxelStorage<T> for VoxelWorld<T> {
 
         Ok(data)
     }
-
 
     fn set_block(&mut self, block_coords: IVec3, data: T) -> Result<()> {
         let sector_coords = block_coords >> 8;
@@ -74,7 +74,6 @@ impl<T: BlockData> ChunkLoad for VoxelWorld<T> {
         }
     }
 
-
     fn unload_chunk(&mut self, chunk_coords: IVec3) -> Result<()> {
         let sector_coords = chunk_coords >> 4;
 
@@ -87,7 +86,6 @@ impl<T: BlockData> ChunkLoad for VoxelWorld<T> {
             bail!("Chunk ({}) does not exist", chunk_coords);
         }
     }
-
 
     fn is_loaded(&self, chunk_coords: IVec3) -> Result<bool> {
         let sector_coords = chunk_coords >> 4;

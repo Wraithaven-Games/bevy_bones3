@@ -10,15 +10,17 @@ mod sector;
 mod voxel;
 mod world;
 
+
 pub use voxel::{BlockData, ChunkLoad, VoxelStorage};
 pub use world::VoxelWorld;
 
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use bevy::prelude::*;
     use pretty_assertions::assert_eq;
+
+    use super::*;
 
 
     #[test]

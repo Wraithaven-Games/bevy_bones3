@@ -1,10 +1,12 @@
 //! A region defines a cuboid boundary of blocks along a uniform, 3D grid.
 
 
-use super::iterators::CuboidIterator;
+use std::fmt::Display;
+
 use anyhow::{bail, Result};
 use bevy::prelude::*;
-use std::fmt::Display;
+
+use super::iterators::CuboidIterator;
 
 
 /// A cuboid region defining a collection of elements within a 3D grid.
@@ -24,7 +26,6 @@ impl Region {
         size: IVec3::new(16, 16, 16),
     };
 
-
     /// Creates a new region from two points within the grid.
     ///
     /// Each point is an opposite corner of the grid.
@@ -38,7 +39,6 @@ impl Region {
             size,
         }
     }
-
 
     /// Creates a new region from a position on the grid and a size.
     ///
@@ -56,24 +56,20 @@ impl Region {
         }
     }
 
-
     /// Gets the minimum corner of this region.
     pub fn min(&self) -> IVec3 {
         self.pos
     }
-
 
     /// Gets the maximum corner of this region.
     pub fn max(&self) -> IVec3 {
         self.pos + self.size - 1
     }
 
-
     /// Gets the size of this region.
     pub fn size(&self) -> IVec3 {
         self.size
     }
-
 
     /// Gets whether or not the given point is within this region.
     pub fn contains(&self, point: IVec3) -> bool {
@@ -86,7 +82,6 @@ impl Region {
             && p.y < self.size.y
             && p.z < self.size.z
     }
-
 
     /// Contains a position within this region into a unique array index.
     ///
@@ -101,12 +96,10 @@ impl Region {
         Ok(index as usize)
     }
 
-
     /// Creates a new cuboid iterator over this region.
     pub fn iter(&self) -> CuboidIterator {
         CuboidIterator::from(self)
     }
-
 
     /// Gets the number of elements within this region.
     pub fn count(&self) -> usize {
@@ -115,8 +108,8 @@ impl Region {
 }
 
 impl IntoIterator for Region {
-    type Item = IVec3;
     type IntoIter = CuboidIterator;
+    type Item = IVec3;
 
     fn into_iter(self) -> Self::IntoIter {
         CuboidIterator::from(&self)
@@ -132,8 +125,9 @@ impl Display for Region {
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use pretty_assertions::assert_eq;
+
+    use super::*;
 
 
     #[test]

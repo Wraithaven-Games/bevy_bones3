@@ -1,8 +1,9 @@
 //! A collection of useful coordinate iterators.
 
 
-use super::region::Region;
 use bevy::prelude::*;
+
+use super::region::Region;
 
 
 /// An iterator for a cuboid grid of coordinates.

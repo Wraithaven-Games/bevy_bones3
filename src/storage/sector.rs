@@ -1,12 +1,13 @@
 //! Represents a 16x16x16 grid of chunks.
 
 
+use anyhow::{bail, Result};
+use bevy::prelude::*;
+
 use super::chunk::VoxelChunk;
 use super::voxel::{ChunkLoad, VoxelStorage};
 use super::BlockData;
 use crate::math::region::Region;
-use anyhow::{bail, Result};
-use bevy::prelude::*;
 
 
 /// A single 16x16x16 grid of chunks within a voxel world that store a single,
@@ -39,7 +40,6 @@ impl<T: BlockData> VoxelStorage<T> for VoxelSector<T> {
             );
         }
     }
-
 
     fn set_block(&mut self, block_coords: IVec3, data: T) -> Result<()> {
         let local_block_coords = block_coords - (self.sector_coords << 8);
@@ -84,7 +84,6 @@ impl<T: BlockData> ChunkLoad for VoxelSector<T> {
         }
     }
 
-
     fn init_chunk(&mut self, chunk_coords: IVec3) -> Result<()> {
         let local_chunk_coords = chunk_coords - (self.sector_coords << 4);
 
@@ -103,7 +102,6 @@ impl<T: BlockData> ChunkLoad for VoxelSector<T> {
             );
         }
     }
-
 
     fn unload_chunk(&mut self, chunk_coords: IVec3) -> Result<()> {
         let local_chunk_coords = chunk_coords - (self.sector_coords << 4);
@@ -133,7 +131,6 @@ impl<T: BlockData> VoxelSector<T> {
             sector_coords,
         }
     }
-
 
     /// Gets the coordinate location of this voxel sector.
     pub fn get_sector_coords(&self) -> IVec3 {

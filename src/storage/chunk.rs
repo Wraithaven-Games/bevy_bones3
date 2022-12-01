@@ -1,11 +1,12 @@
 //! Represents a single 16x16x16 grid of voxels.
 
 
+use anyhow::{bail, Result};
+use bevy::prelude::*;
+
 use super::voxel::VoxelStorage;
 use super::BlockData;
 use crate::math::region::Region;
-use anyhow::{bail, Result};
-use bevy::prelude::*;
 
 
 /// A single 16x16x16 grid of data values that are stored within a voxel chunk.
@@ -35,7 +36,6 @@ impl<T: BlockData> VoxelStorage<T> for VoxelChunk<T> {
             );
         }
     }
-
 
     fn set_block(&mut self, block_coords: IVec3, data: T) -> Result<()> {
         if let Ok(index) = Region::CHUNK.point_to_index(block_coords) {
