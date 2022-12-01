@@ -4,16 +4,13 @@
 //! Unloaded sections of the world must be loaded before they can be properly
 //! manipulated.
 
-
 mod chunk;
 mod sector;
 mod voxel;
 mod world;
 
-
 pub use voxel::{BlockData, ChunkLoad, VoxelStorage};
 pub use world::VoxelWorld;
-
 
 #[cfg(test)]
 mod test {
@@ -21,7 +18,6 @@ mod test {
     use pretty_assertions::assert_eq;
 
     use super::*;
-
 
     #[test]
     fn read_write_world() {

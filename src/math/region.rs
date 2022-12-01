@@ -1,13 +1,11 @@
 //! A region defines a cuboid boundary of blocks along a uniform, 3D grid.
 
-
 use std::fmt::Display;
 
 use anyhow::{bail, Result};
 use bevy::prelude::*;
 
 use super::iterators::CuboidIterator;
-
 
 /// A cuboid region defining a collection of elements within a 3D grid.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -122,13 +120,11 @@ impl Display for Region {
     }
 }
 
-
 #[cfg(test)]
 mod test {
     use pretty_assertions::assert_eq;
 
     use super::*;
-
 
     #[test]
     fn index_is_unique() {

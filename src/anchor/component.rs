@@ -1,8 +1,6 @@
 //! This module contains the Bevy component that implements the chunk anchor.
 
-
 use bevy::prelude::*;
-
 
 /// Defines an anchor within a world that forces a radius of chunks around
 /// itself to stay loaded.

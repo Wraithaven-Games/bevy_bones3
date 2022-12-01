@@ -4,14 +4,12 @@
 //! loaded and unloaded as needed to properly manipulate the data within the
 //! world.
 
-
 use anyhow::{anyhow, bail, Result};
 use bevy::prelude::*;
 
 use super::sector::VoxelSector;
 use super::voxel::{ChunkLoad, VoxelStorage};
 use super::BlockData;
-
 
 /// A marker component indicating the parent entity of a voxel world.
 #[derive(Debug, Reflect, Component, Default)]

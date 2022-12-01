@@ -1,9 +1,7 @@
 //! This module contains events that can be triggered by the `bevy_bones3`
 //! crate.
 
-
 use bevy::prelude::{Entity, IVec3};
-
 
 /// An event that is triggered when a chunk is loaded within a world.
 ///
@@ -18,7 +16,6 @@ pub struct ChunkLoadEvent {
     /// The coordinates of the chunk that was loaded.
     pub chunk_coords: IVec3,
 }
-
 
 /// An event that is triggered when a chunk is unloaded from a voxel world.
 #[derive(Debug, Clone, PartialEq, Eq)]

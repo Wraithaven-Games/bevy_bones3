@@ -1,13 +1,11 @@
 //! This module contains a chunk loader cache implementation to (hopefully) make
 //! deciding which chunks to load be faster and have no memory allocations.
 
-
 use std::cmp::Ordering;
 
 use bevy::prelude::*;
 
 use crate::math::region::Region;
-
 
 /// An internal cache for the chunk loader.
 ///
@@ -66,7 +64,6 @@ impl<const R: u8> Default for ChunkLoaderCache<R> {
         }
     }
 }
-
 
 /// A chunk coordinate offset node, for cache purposes when determining chunk
 /// loading order.

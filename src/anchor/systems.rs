@@ -1,14 +1,12 @@
 //! This module contains the Bevy systems used to load and unload chunks based
 //! on chunk anchor entities.
 
-
 use bevy::prelude::*;
 
 use super::cache::ChunkLoaderCache;
 use super::ChunkAnchor;
 use crate::prelude::ChunkLoadEvent;
 use crate::storage::{BlockData, ChunkLoad, VoxelWorld};
-
 
 /// This system will triggers new chunks to be loaded based on the current
 /// locations of chunk anchors within the world.

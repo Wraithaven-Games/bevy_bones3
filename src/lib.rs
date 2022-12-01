@@ -12,7 +12,6 @@ pub mod events;
 pub mod math;
 pub mod storage;
 
-
 use std::marker::PhantomData;
 
 use bevy::prelude::{App, Plugin};
@@ -21,7 +20,6 @@ use storage::{BlockData, VoxelWorld};
 
 use crate::anchor::{load_chunks, ChunkAnchor};
 
-
 /// Contains a re-export of all components and systems defined within this
 /// crate.
 pub mod prelude {
@@ -29,8 +27,8 @@ pub mod prelude {
     pub use super::events::*;
     pub use super::math::*;
     pub use super::storage::*;
+    pub use super::*;
 }
-
 
 /// The root plugin for implementing all Bones Cubed logic components and
 /// systems.

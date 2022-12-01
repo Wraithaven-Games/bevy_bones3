@@ -1,10 +1,8 @@
 //! A collection of useful coordinate iterators.
 
-
 use bevy::prelude::*;
 
 use super::region::Region;
-
 
 /// An iterator for a cuboid grid of coordinates.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -58,7 +56,6 @@ impl Iterator for CuboidIterator {
                 self.next = Some(value);
             }
 
-
             Some(next)
         } else {
             None
@@ -66,11 +63,9 @@ impl Iterator for CuboidIterator {
     }
 }
 
-
 #[cfg(test)]
 mod test {
     use super::*;
-
 
     #[test]
     fn simple_cuboid() {

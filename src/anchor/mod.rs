@@ -1,15 +1,12 @@
 //! This module handles the automatic loading and unloading of chunks within a
 //! voxel world based off a given chunk anchor's position and effect radius.
 
-
 mod cache;
 mod component;
 mod systems;
 
-
 pub use component::ChunkAnchor;
 pub use systems::*;
-
 
 #[cfg(test)]
 mod test {
@@ -20,7 +17,6 @@ mod test {
     use crate::prelude::ChunkLoadEvent;
     use crate::storage::VoxelWorld;
     use crate::Bones3Plugin;
-
 
     #[test]
     fn load_chunks() {

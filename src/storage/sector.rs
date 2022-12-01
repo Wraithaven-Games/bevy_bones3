@@ -1,6 +1,5 @@
 //! Represents a 16x16x16 grid of chunks.
 
-
 use anyhow::{bail, Result};
 use bevy::prelude::*;
 
@@ -8,7 +7,6 @@ use super::chunk::VoxelChunk;
 use super::voxel::{ChunkLoad, VoxelStorage};
 use super::BlockData;
 use crate::math::region::Region;
-
 
 /// A single 16x16x16 grid of chunks within a voxel world that store a single,
 /// specific type of data. These chunks may optionally be defined.
