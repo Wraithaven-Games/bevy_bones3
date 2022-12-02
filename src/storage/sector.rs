@@ -1,10 +1,16 @@
 //! Represents a 16x16x16 grid of chunks.
 
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, Result};
 use bevy::prelude::*;
 
 use super::chunk::VoxelChunk;
-use super::voxel::{ChunkLoad, VoxelStorage};
+use super::voxel::{
+    ChunkStorage,
+    InitChunkResult,
+    UnloadAllChunksResult,
+    UnloadChunkResult,
+    VoxelStorage,
+};
 use super::BlockData;
 use crate::math::region::Region;
 
@@ -63,8 +69,60 @@ impl<T: BlockData> VoxelStorage<T> for VoxelSector<T> {
     }
 }
 
-impl<T: BlockData> ChunkLoad for VoxelSector<T> {
-    fn is_loaded(&self, chunk_coords: IVec3) -> Result<bool> {
+impl<T: BlockData> ChunkStorage for VoxelSector<T> {
+    fn init_chunk(&mut self, chunk_coords: IVec3) -> InitChunkResult {
+        let local_chunk_coords = chunk_coords - (self.sector_coords << 4);
+
+        if let Ok(index) = Region::CHUNK.point_to_index(local_chunk_coords) {
+            if self.chunks[index].is_some() {
+                InitChunkResult(Err(anyhow!("Chunk ({}) already exists", chunk_coords)))
+            } else {
+                self.chunks[index] = Some(VoxelChunk::<T>::default());
+                InitChunkResult(Ok(chunk_coords))
+            }
+        } else {
+            InitChunkResult(Err(anyhow!(
+                "Chunk coordinates ({}) are outside of sector bounds ({})",
+                chunk_coords,
+                Region::from_size(self.sector_coords << 4, IVec3::new(16, 16, 16))
+            )))
+        }
+    }
+
+    fn unload_chunk(&mut self, chunk_coords: IVec3) -> UnloadChunkResult {
+        let local_chunk_coords = chunk_coords - (self.sector_coords << 4);
+
+        if let Ok(index) = Region::CHUNK.point_to_index(local_chunk_coords) {
+            if self.chunks[index].is_some() {
+                self.chunks[index] = None;
+                UnloadChunkResult(Ok(chunk_coords))
+            } else {
+                UnloadChunkResult(Err(anyhow!("Chunk ({}) does not exist", chunk_coords)))
+            }
+        } else {
+            UnloadChunkResult(Err(anyhow!(
+                "Chunk coordinates ({}) are outside of sector bounds ({})",
+                chunk_coords,
+                Region::from_size(self.sector_coords << 4, IVec3::new(16, 16, 16))
+            )))
+        }
+    }
+
+    fn unload_all_chunks(&mut self) -> UnloadAllChunksResult {
+        let mut unloaded = vec![];
+
+        for chunk_coords in Region::CHUNK.iter() {
+            let index = Region::CHUNK.point_to_index(chunk_coords).unwrap();
+            if self.chunks[index].is_some() {
+                self.chunks[index] = None;
+                unloaded.push(chunk_coords);
+            }
+        }
+
+        UnloadAllChunksResult(unloaded)
+    }
+
+    fn is_chunk_loaded(&self, chunk_coords: IVec3) -> Result<bool> {
         let local_chunk_coords = chunk_coords - (self.sector_coords << 4);
 
         if let Ok(index) = Region::CHUNK.point_to_index(local_chunk_coords) {
@@ -72,44 +130,6 @@ impl<T: BlockData> ChunkLoad for VoxelSector<T> {
                 Ok(true)
             } else {
                 Ok(false)
-            }
-        } else {
-            bail!(
-                "Chunk coordinates ({}) are outside of sector bounds ({})",
-                chunk_coords,
-                Region::from_size(self.sector_coords << 4, IVec3::new(16, 16, 16))
-            );
-        }
-    }
-
-    fn init_chunk(&mut self, chunk_coords: IVec3) -> Result<()> {
-        let local_chunk_coords = chunk_coords - (self.sector_coords << 4);
-
-        if let Ok(index) = Region::CHUNK.point_to_index(local_chunk_coords) {
-            if self.chunks[index].is_some() {
-                bail!("Chunk ({}) already exists", chunk_coords);
-            } else {
-                self.chunks[index] = Some(VoxelChunk::<T>::default());
-                Ok(())
-            }
-        } else {
-            bail!(
-                "Chunk coordinates ({}) are outside of sector bounds ({})",
-                chunk_coords,
-                Region::from_size(self.sector_coords << 4, IVec3::new(16, 16, 16))
-            );
-        }
-    }
-
-    fn unload_chunk(&mut self, chunk_coords: IVec3) -> Result<()> {
-        let local_chunk_coords = chunk_coords - (self.sector_coords << 4);
-
-        if let Ok(index) = Region::CHUNK.point_to_index(local_chunk_coords) {
-            if self.chunks[index].is_some() {
-                bail!("Chunk ({}) does not exist", chunk_coords);
-            } else {
-                self.chunks[index] = None;
-                Ok(())
             }
         } else {
             bail!(

@@ -6,7 +6,7 @@ use bevy::prelude::*;
 use super::cache::ChunkLoaderCache;
 use super::ChunkAnchor;
 use crate::prelude::ChunkLoadEvent;
-use crate::storage::{BlockData, ChunkLoad, VoxelWorld};
+use crate::storage::{BlockData, ChunkStorage, VoxelWorld};
 
 /// This system will triggers new chunks to be loaded based on the current
 /// locations of chunk anchors within the world.
@@ -25,12 +25,11 @@ pub fn load_chunks<const R: u8, T: BlockData>(
             cache.update_weighted_dir(anchor.weighted_dir);
 
             for chunk_coords in cache.iter(radius, center) {
-                if !world.is_loaded(chunk_coords).unwrap() {
-                    world.init_chunk(chunk_coords).unwrap();
-                    chunk_load_ev.send(ChunkLoadEvent {
-                        world: world_entity,
-                        chunk_coords,
-                    });
+                if !world.is_chunk_loaded(chunk_coords).unwrap() {
+                    world
+                        .init_chunk(chunk_coords)
+                        .call_event(&mut chunk_load_ev, world_entity)
+                        .unwrap();
                     break;
                 }
             }
