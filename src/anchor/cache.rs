@@ -33,7 +33,7 @@ impl<const R: u8> ChunkLoaderCache<R> {
     pub fn update_weighted_dir(&mut self, weighted_dir: Vec3) {
         self.offsets
             .iter_mut()
-            .for_each(|n| n.priority = n.distance + n.pos.as_vec3().dot(weighted_dir));
+            .for_each(|n| n.priority = n.distance - n.pos.as_vec3().normalize().dot(weighted_dir));
 
         self.offsets.sort_unstable_by(|a, b| {
             a.priority.partial_cmp(&b.priority).unwrap_or(Ordering::Equal)
