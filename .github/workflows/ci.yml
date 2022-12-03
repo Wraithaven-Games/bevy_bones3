@@ -1,0 +1,140 @@
+name: CI
+on: [push, pull_request]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Cache
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.toml') }}
+
+    - name: Install latest
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+        components: rustfmt, clippy
+
+    - name: Installing needed Ubuntu dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install pkg-config libx11-dev libasound2-dev libudev-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
+
+    - name: Print Buildtool Versions
+      run: |
+        rustc -Vv
+        cargo -V
+
+    - name: Run Unit Tests
+      run: |
+        cargo test --all-targets
+
+
+  format:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Install latest
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+        components: rustfmt, clippy
+
+    - name: Installing needed Ubuntu dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install pkg-config libx11-dev libasound2-dev libudev-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
+
+    - name: Print Buildtool Versions
+      run: |
+        rustc -Vv
+        cargo -V
+
+    - name: Verify Formatting
+      run: cargo fmt --all -- --check
+
+
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Cache
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-clippy-${{ hashFiles('**/Cargo.toml') }}
+
+    - name: Install latest nightly
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: nightly
+        override: true
+        components: rustfmt, clippy
+
+    - name: Installing needed Ubuntu dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install pkg-config libx11-dev libasound2-dev libudev-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
+
+    - name: Print Buildtool Versions
+      run: |
+        rustc -Vv
+        cargo -V
+
+    - name: Verify Clippy
+      run: cargo +nightly clippy --all-targets --all-features -- -D warnings
+
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Install latest
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+        components: rustfmt, clippy
+
+    - name: Installing needed Ubuntu dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install pkg-config libx11-dev libasound2-dev libudev-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
+
+    - name: Print Buildtool Versions
+      run: |
+        rustc -Vv
+        cargo -V
+
+    - name: Build docs
+      run: cargo doc
