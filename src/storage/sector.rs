@@ -111,10 +111,12 @@ impl<T: BlockData> ChunkStorage for VoxelSector<T> {
     fn unload_all_chunks(&mut self) -> UnloadAllChunksResult {
         let mut unloaded = vec![];
 
-        for chunk_coords in Region::CHUNK.iter() {
-            let index = Region::CHUNK.point_to_index(chunk_coords).unwrap();
+        for local_chunk_coords in Region::CHUNK.iter() {
+            let index = Region::CHUNK.point_to_index(local_chunk_coords).unwrap();
             if self.chunks[index].is_some() {
                 self.chunks[index] = None;
+
+                let chunk_coords = local_chunk_coords + (self.sector_coords << 4);
                 unloaded.push(chunk_coords);
             }
         }
