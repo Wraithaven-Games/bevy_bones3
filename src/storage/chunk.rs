@@ -13,13 +13,23 @@ use crate::math::region::Region;
 pub struct VoxelChunk<T: BlockData> {
     /// The block data array for this chunk.
     blocks: Box<[T; 4096]>,
+
+    /// The coordinates of this chunk.
+    chunk_coords: IVec3,
 }
 
-impl<T: BlockData> Default for VoxelChunk<T> {
-    fn default() -> Self {
+impl<T: BlockData> VoxelChunk<T> {
+    /// Creates a new voxel chunk at the given chunk coordinates.
+    pub fn new(chunk_coords: IVec3) -> Self {
         Self {
             blocks: Box::new([default(); 4096]),
+            chunk_coords,
         }
+    }
+
+    /// Gets the coordinates of this chunk.
+    pub fn get_chunk_coords(&self) -> IVec3 {
+        self.chunk_coords
     }
 }
 

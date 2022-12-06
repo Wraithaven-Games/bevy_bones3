@@ -40,7 +40,7 @@ impl<T: BlockData> VoxelStorage<T> for VoxelSector<T> {
             bail!(
                 "Block coordinates ({}) are outside of sector bounds ({})",
                 block_coords,
-                Region::from_size(self.sector_coords << 8, IVec3::new(256, 256, 256))
+                Region::from_size(self.sector_coords << 8, IVec3::new(256, 256, 256)).unwrap()
             );
         }
     }
@@ -63,7 +63,7 @@ impl<T: BlockData> VoxelStorage<T> for VoxelSector<T> {
             bail!(
                 "Block coordinates ({}) are outside of sector bounds ({})",
                 block_coords,
-                Region::from_size(self.sector_coords << 8, IVec3::new(256, 256, 256))
+                Region::from_size(self.sector_coords << 8, IVec3::new(256, 256, 256)).unwrap()
             );
         }
     }
@@ -77,14 +77,14 @@ impl<T: BlockData> ChunkStorage for VoxelSector<T> {
             if self.chunks[index].is_some() {
                 InitChunkResult(Err(anyhow!("Chunk ({}) already exists", chunk_coords)))
             } else {
-                self.chunks[index] = Some(VoxelChunk::<T>::default());
+                self.chunks[index] = Some(VoxelChunk::<T>::new(chunk_coords));
                 InitChunkResult(Ok(chunk_coords))
             }
         } else {
             InitChunkResult(Err(anyhow!(
                 "Chunk coordinates ({}) are outside of sector bounds ({})",
                 chunk_coords,
-                Region::from_size(self.sector_coords << 4, IVec3::new(16, 16, 16))
+                Region::from_size(self.sector_coords << 4, IVec3::new(16, 16, 16)).unwrap()
             )))
         }
     }
@@ -103,7 +103,7 @@ impl<T: BlockData> ChunkStorage for VoxelSector<T> {
             UnloadChunkResult(Err(anyhow!(
                 "Chunk coordinates ({}) are outside of sector bounds ({})",
                 chunk_coords,
-                Region::from_size(self.sector_coords << 4, IVec3::new(16, 16, 16))
+                Region::from_size(self.sector_coords << 4, IVec3::new(16, 16, 16)).unwrap()
             )))
         }
     }
@@ -137,7 +137,7 @@ impl<T: BlockData> ChunkStorage for VoxelSector<T> {
             bail!(
                 "Chunk coordinates ({}) are outside of sector bounds ({})",
                 chunk_coords,
-                Region::from_size(self.sector_coords << 4, IVec3::new(16, 16, 16))
+                Region::from_size(self.sector_coords << 4, IVec3::new(16, 16, 16)).unwrap()
             );
         }
     }
@@ -155,5 +155,10 @@ impl<T: BlockData> VoxelSector<T> {
     /// Gets the coordinate location of this voxel sector.
     pub fn get_sector_coords(&self) -> IVec3 {
         self.sector_coords
+    }
+
+    /// Gets an iterator over all loaded chunks within this sector.
+    pub fn chunk_iter(&self) -> impl Iterator<Item = &VoxelChunk<T>> {
+        self.chunks.iter().flatten()
     }
 }

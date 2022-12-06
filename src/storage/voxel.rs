@@ -3,6 +3,8 @@
 use anyhow::Result;
 use bevy::prelude::{Entity, EventWriter, IVec3};
 
+use super::BlockRegion;
+use crate::math::region::Region;
 use crate::prelude::{ChunkLoadEvent, ChunkUnloadEvent};
 
 /// A blanket trait for data types that can be safely stored within a voxel
@@ -26,6 +28,23 @@ pub trait VoxelStorage<T: BlockData> {
     /// This function returns an error if the block coordinates lie outside of
     /// the bounds of this container.
     fn set_block(&mut self, block_coords: IVec3, data: T) -> Result<()>;
+}
+
+/// An extension for voxel storage container that allows for groups of blocks to
+/// be read from and written to at a time for performance improvements.
+pub trait VoxelStorageRegion<T: BlockData>: VoxelStorage<T> {
+    /// Gets a region of block data all at once.
+    ///
+    /// This method creates a new block region, based on the given requested
+    /// region selection, and returns it. This approach is finally identical
+    /// to reading each block one by one, via [`get_block`], but is much
+    /// faster when reading a large number of blocks that are near one
+    /// another.
+    ///
+    /// If the indicated region intersects areas outside of the container, those
+    /// locations within the returned region are set to the default value of
+    /// T.
+    fn get_block_region(&self, region: Region) -> BlockRegion<T>;
 }
 
 /// Defines that continuous chunks of data maybe be loaded and unloaded within

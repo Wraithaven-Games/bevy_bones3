@@ -23,6 +23,12 @@ impl Region {
         pos:  IVec3::ZERO,
         size: IVec3::new(16, 16, 16),
     };
+    /// A region that contains a sector of chunks, located at the position (0,
+    /// 0, 0).
+    pub const SECTOR: Region = Region {
+        pos:  IVec3::ZERO,
+        size: IVec3::new(256, 256, 256),
+    };
 
     /// Creates a new region from two points within the grid.
     ///
@@ -43,15 +49,33 @@ impl Region {
     /// The position is the lowest point along the X, Y, and Z axis'.
     ///
     /// This function panics if the size is <= 0 along any axis.
-    pub fn from_size(pos: IVec3, size: IVec3) -> Self {
+    pub fn from_size(pos: IVec3, size: IVec3) -> Result<Self> {
         if size.x <= 0 || size.y <= 0 || size.z <= 0 {
-            panic!("Cannot a region with a size <= 0. Found: {size}");
+            bail!("Cannot a region with a size <= 0. Found: {size}");
         }
 
-        Self {
+        Ok(Self {
             pos,
             size,
+        })
+    }
+
+    /// Creates a new region based on the intersection between provided regions.
+    ///
+    /// If the two given regions do not intersect, an error is returned.
+    pub fn intersection(a: &Region, b: &Region) -> Result<Self> {
+        let min = a.min().max(b.min());
+        let max = a.max().min(b.max());
+        let size = max - min + 1;
+
+        if size.x <= 0 || size.y <= 0 || size.z <= 0 {
+            bail!("Regions {a} and {b} do not intersect");
         }
+
+        Ok(Self {
+            pos: min,
+            size,
+        })
     }
 
     /// Gets the minimum corner of this region.
@@ -102,6 +126,35 @@ impl Region {
     /// Gets the number of elements within this region.
     pub fn count(&self) -> usize {
         (self.size.x * self.size.y * self.size.z) as usize
+    }
+
+    /// Shifts this region's position by the given amount.
+    pub fn shift(self, amount: IVec3) -> Self {
+        Self {
+            pos:  self.pos + amount,
+            size: self.size,
+        }
+    }
+
+    /// Checks whether or not this region intersects another region.
+    pub fn intersects(&self, other: Region) -> bool {
+        let min = self.min().max(other.min());
+        let max = self.max().min(other.max());
+        let size = max - min;
+
+        size.x >= 0 && size.y >= 0 && size.z >= 0
+    }
+
+    /// Expands this region to include the given point.
+    pub fn expand(self, point: IVec3) -> Self {
+        let min = self.min().min(point);
+        let max = self.max().max(point);
+        let size = max - min + 1;
+
+        Self {
+            pos: min,
+            size,
+        }
     }
 }
 

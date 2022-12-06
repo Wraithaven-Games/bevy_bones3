@@ -7,6 +7,7 @@
 use anyhow::{anyhow, Result};
 use bevy::prelude::*;
 
+use super::chunk::VoxelChunk;
 use super::sector::VoxelSector;
 use super::voxel::{
     ChunkStorage,
@@ -14,8 +15,10 @@ use super::voxel::{
     UnloadAllChunksResult,
     UnloadChunkResult,
     VoxelStorage,
+    VoxelStorageRegion,
 };
-use super::BlockData;
+use super::{BlockData, BlockRegion};
+use crate::math::region::Region;
 
 /// A marker component indicating the parent entity of a voxel world.
 #[derive(Debug, Reflect, Component, Default)]
@@ -54,6 +57,37 @@ impl<T: BlockData> VoxelStorage<T> for VoxelWorld<T> {
                 },
                 |s| s.set_block(block_coords, data),
             )
+    }
+}
+
+impl<T: BlockData> VoxelStorageRegion<T> for VoxelWorld<T> {
+    fn get_block_region(&self, region: Region) -> BlockRegion<T> {
+        let mut block_region = BlockRegion::new(region);
+
+        let chunks = self
+            .sectors
+            .iter()
+            .filter(|s| Region::SECTOR.shift(s.get_sector_coords() << 8).intersects(region))
+            .flat_map(|s| s.chunk_iter())
+            .flat_map(|chunk| -> Result<(&VoxelChunk<T>, Region)> {
+                Ok((
+                    chunk,
+                    Region::intersection(
+                        &Region::CHUNK.shift(chunk.get_chunk_coords() << 4),
+                        &region,
+                    )?,
+                ))
+            });
+
+        for (chunk, region) in chunks {
+            for pos in region.iter() {
+                let local_pos = pos & 15;
+                let block = chunk.get_block(local_pos).unwrap();
+                block_region.set_block(pos, block).unwrap();
+            }
+        }
+
+        block_region
     }
 }
 
