@@ -1,4 +1,7 @@
 //! A collection of simple math utilities for working with voxel environments.
 
-pub mod iterators;
-pub mod region;
+mod iterators;
+mod region;
+
+pub use iterators::*;
+pub use region::*;

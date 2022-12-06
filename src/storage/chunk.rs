@@ -5,7 +5,7 @@ use bevy::prelude::*;
 
 use super::voxel::VoxelStorage;
 use super::BlockData;
-use crate::math::region::Region;
+use crate::math::Region;
 
 /// A single 16x16x16 grid of data values that are stored within a voxel chunk.
 /// The block data is stored in a fixed array on the heap.

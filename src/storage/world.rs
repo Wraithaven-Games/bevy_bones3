@@ -18,7 +18,7 @@ use super::voxel::{
     VoxelStorageRegion,
 };
 use super::{BlockData, BlockRegion};
-use crate::math::region::Region;
+use crate::math::Region;
 
 /// A marker component indicating the parent entity of a voxel world.
 #[derive(Debug, Reflect, Component, Default)]

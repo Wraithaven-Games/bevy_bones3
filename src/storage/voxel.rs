@@ -4,7 +4,7 @@ use anyhow::Result;
 use bevy::prelude::{Entity, EventWriter, IVec3};
 
 use super::BlockRegion;
-use crate::math::region::Region;
+use crate::math::Region;
 use crate::prelude::{ChunkLoadEvent, ChunkUnloadEvent};
 
 /// A blanket trait for data types that can be safely stored within a voxel

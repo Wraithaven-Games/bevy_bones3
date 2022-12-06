@@ -10,6 +10,7 @@
 pub mod anchor;
 pub mod events;
 pub mod math;
+pub mod meshing;
 pub mod storage;
 
 use std::marker::PhantomData;
@@ -26,6 +27,7 @@ pub mod prelude {
     pub use super::anchor::*;
     pub use super::events::*;
     pub use super::math::*;
+    pub use super::meshing::*;
     pub use super::storage::*;
     pub use super::*;
 }

@@ -5,7 +5,7 @@ use std::cmp::Ordering;
 
 use bevy::prelude::*;
 
-use crate::math::region::Region;
+use crate::math::Region;
 
 /// An internal cache for the chunk loader.
 ///

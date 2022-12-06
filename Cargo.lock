@@ -277,6 +277,7 @@ dependencies = [
  "bevy",
  "bevy_flycam",
  "bevy_test_utils",
+ "bitflags",
  "pretty_assertions",
  "serde",
 ]

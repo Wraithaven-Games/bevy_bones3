@@ -5,7 +5,7 @@ use anyhow::Result;
 use bevy::prelude::IVec3;
 
 use super::{BlockData, VoxelStorage};
-use crate::math::region::Region;
+use crate::math::Region;
 
 /// A self-contained region of blocks.
 ///
