@@ -15,7 +15,7 @@ impl<T: BlockData + BlockShape> RemeshChunk for VoxelWorld<T> {
         let mut mesh = TempMesh::default();
 
         let block_coords = chunk_coords << 4;
-        let blocks = self.get_block_region(Region::from_points(
+        let blocks = self.get_slice(Region::from_points(
             block_coords + IVec3::ONE * 17,
             block_coords - IVec3::ONE,
         ));

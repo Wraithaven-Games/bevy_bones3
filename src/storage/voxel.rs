@@ -3,7 +3,7 @@
 use anyhow::Result;
 use bevy::prelude::{Entity, EventWriter, IVec3};
 
-use super::BlockRegion;
+use super::VoxelWorldSlice;
 use crate::math::Region;
 use crate::prelude::{ChunkLoadEvent, ChunkUnloadEvent};
 
@@ -33,18 +33,18 @@ pub trait VoxelStorage<T: BlockData> {
 /// An extension for voxel storage container that allows for groups of blocks to
 /// be read from and written to at a time for performance improvements.
 pub trait VoxelStorageRegion<T: BlockData>: VoxelStorage<T> {
-    /// Gets a region of block data all at once.
+    /// Gets a slice of the voxel storage container, cloning over all voxel data
+    /// within the region bounds.
     ///
-    /// This method creates a new block region, based on the given requested
-    /// region selection, and returns it. This approach is finally identical
-    /// to reading each block one by one, via [`VoxelStorage::get_block`], but
-    /// is much faster when reading a large number of blocks that are near
-    /// one another.
+    /// This method creates a new voxel world slice based on the given requested
+    /// region selection, and returns it. This approach is functionally
+    /// identical to reading each block one by one, via
+    /// [`VoxelStorage::get_block`], but is much faster when reading a large
+    /// number of blocks that are near one another.
     ///
     /// If the indicated region intersects areas outside of the container, those
-    /// locations within the returned region are set to the default value of
-    /// T.
-    fn get_block_region(&self, region: Region) -> BlockRegion<T>;
+    /// locations within the returned region are set to the default value of T.
+    fn get_slice(&self, region: Region) -> VoxelWorldSlice<T>;
 }
 
 /// Defines that continuous chunks of data maybe be loaded and unloaded within

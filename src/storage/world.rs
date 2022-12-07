@@ -17,7 +17,7 @@ use super::voxel::{
     VoxelStorage,
     VoxelStorageRegion,
 };
-use super::{BlockData, BlockRegion};
+use super::{BlockData, VoxelWorldSlice};
 use crate::math::Region;
 
 /// A marker component indicating the parent entity of a voxel world.
@@ -61,8 +61,8 @@ impl<T: BlockData> VoxelStorage<T> for VoxelWorld<T> {
 }
 
 impl<T: BlockData> VoxelStorageRegion<T> for VoxelWorld<T> {
-    fn get_block_region(&self, region: Region) -> BlockRegion<T> {
-        let mut block_region = BlockRegion::new(region);
+    fn get_slice(&self, region: Region) -> VoxelWorldSlice<T> {
+        let mut block_region = VoxelWorldSlice::new(region);
 
         let chunks = self
             .sectors

@@ -4,15 +4,15 @@
 //! Unloaded sections of the world must be loaded before they can be properly
 //! manipulated.
 
-mod block_region;
 mod chunk;
 mod sector;
 mod voxel;
 mod world;
+mod world_slice;
 
-pub use block_region::BlockRegion;
 pub use voxel::{BlockData, ChunkStorage, VoxelStorage, VoxelStorageRegion};
 pub use world::VoxelWorld;
+pub use world_slice::VoxelWorldSlice;
 
 #[cfg(test)]
 mod test {
