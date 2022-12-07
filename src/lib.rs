@@ -10,6 +10,7 @@
 pub mod anchor;
 pub mod events;
 pub mod math;
+#[cfg(feature = "meshing")]
 pub mod meshing;
 pub mod storage;
 
@@ -27,6 +28,7 @@ pub mod prelude {
     pub use super::anchor::*;
     pub use super::events::*;
     pub use super::math::*;
+    #[cfg(feature = "meshing")]
     pub use super::meshing::*;
     pub use super::storage::*;
     pub use super::*;

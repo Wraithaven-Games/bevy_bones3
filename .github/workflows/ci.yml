@@ -137,4 +137,4 @@ jobs:
         cargo -V
 
     - name: Build docs
-      run: cargo doc
+      run: cargo doc --all-features

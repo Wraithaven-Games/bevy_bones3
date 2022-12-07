@@ -37,9 +37,9 @@ pub trait VoxelStorageRegion<T: BlockData>: VoxelStorage<T> {
     ///
     /// This method creates a new block region, based on the given requested
     /// region selection, and returns it. This approach is finally identical
-    /// to reading each block one by one, via [`get_block`], but is much
-    /// faster when reading a large number of blocks that are near one
-    /// another.
+    /// to reading each block one by one, via [`VoxelStorage::get_block`], but
+    /// is much faster when reading a large number of blocks that are near
+    /// one another.
     ///
     /// If the indicated region intersects areas outside of the container, those
     /// locations within the returned region are set to the default value of
