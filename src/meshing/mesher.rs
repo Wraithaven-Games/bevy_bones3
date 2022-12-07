@@ -1,27 +1,20 @@
 //! Contains the core implementation for chunk mesh generation.
 
-use bevy::prelude::IVec3;
-
 use crate::prelude::*;
 
 /// A trait that is applied to a voxel world to all for chunks to be remeshed.
 pub trait RemeshChunk {
-    /// Generates a new mesh for the chunk at the given chunk coordinates.
-    fn generate_mesh_for_chunk(&self, chunk_coords: IVec3) -> TempMesh;
+    /// Generates a new mesh for the blocks located within the given region.
+    fn generate_mesh(&self, region: Region) -> TempMesh;
 }
 
 impl<T: BlockData + BlockShape> RemeshChunk for VoxelWorld<T> {
-    fn generate_mesh_for_chunk(&self, chunk_coords: IVec3) -> TempMesh {
+    fn generate_mesh(&self, region: Region) -> TempMesh {
         let mut mesh = TempMesh::default();
 
-        let block_coords = chunk_coords << 4;
-        let blocks = self.get_slice(Region::from_points(
-            block_coords + IVec3::ONE * 17,
-            block_coords - IVec3::ONE,
-        ));
+        let blocks = self.get_slice(Region::from_points(region.min() - 1, region.max() + 1));
 
-        for local_pos in Region::CHUNK.iter() {
-            let block_pos = local_pos + block_coords;
+        for block_pos in region.iter() {
             let data = blocks.get_block(block_pos).unwrap();
             let Some(mut model_gen) = data.get_generator() else {
                 continue;
@@ -46,6 +39,7 @@ impl<T: BlockData + BlockShape> RemeshChunk for VoxelWorld<T> {
             check_occlusion(&mut occlusion, BlockOcclusion::NEG_Z);
             check_occlusion(&mut occlusion, BlockOcclusion::POS_Z);
 
+            let local_pos = block_pos - region.min();
             model_gen.set_block_pos(local_pos);
             model_gen.set_occlusion(occlusion);
             model_gen.write_to_mesh(&mut mesh);
