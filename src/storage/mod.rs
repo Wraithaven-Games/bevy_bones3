@@ -21,7 +21,6 @@ mod test {
     use pretty_assertions::{assert_eq, assert_ne};
 
     use super::*;
-    use crate::prelude::{Bones3Plugin, ChunkLoadEvent, ChunkUnloadEvent};
 
     #[derive(Resource)]
     struct ChunkCoords(IVec3);
@@ -69,7 +68,8 @@ mod test {
         // Initialize our app
         let mut app = App::new();
         app.insert_resource(ChunkCoords(IVec3::new(1, 2, -3)));
-        app.add_plugin(Bones3Plugin::<4, u8>::default());
+        app.add_event::<ChunkLoadEvent>();
+        app.add_event::<ChunkUnloadEvent>();
 
         // Initialize our test world
         app.world.spawn(VoxelWorld::<u8>::default());
