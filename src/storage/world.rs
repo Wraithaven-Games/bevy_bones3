@@ -7,14 +7,8 @@
 use anyhow::{anyhow, bail, Result};
 use bevy::prelude::*;
 
-use super::init_chunk_result::InitChunkResult;
-use super::voxel::{
-    ChunkStorage,
-    UnloadAllChunksResult,
-    UnloadChunkResult,
-    VoxelStorage,
-    VoxelStorageRegion,
-};
+use super::events::{InitChunkResult, UnloadAllChunksResult, UnloadChunkResult};
+use super::voxel::{ChunkStorage, VoxelStorage, VoxelStorageRegion};
 use super::{BlockData, VoxelWorldSlice};
 use crate::math::Region;
 

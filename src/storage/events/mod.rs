@@ -1,7 +1,12 @@
 //! This module contains events that can be triggered by the `bevy_bones3`
 //! crate.
 
+mod init_chunk_result;
+mod unload_chunk_result;
+
 use bevy::prelude::{Entity, IVec3};
+pub use init_chunk_result::InitChunkResult;
+pub use unload_chunk_result::{UnloadAllChunksResult, UnloadChunkResult};
 
 /// An event that is triggered when a chunk is loaded within a world.
 ///

@@ -6,9 +6,9 @@ use std::marker::PhantomData;
 use anyhow::{bail, Result};
 use bevy::prelude::{Entity, EventWriter, IVec3};
 
-use super::{BlockData, ChunkStorage, VoxelStorageRegion, VoxelWorldSlice};
-use crate::events::ChunkLoadEvent;
+use super::ChunkLoadEvent;
 use crate::math::Region;
+use crate::storage::{BlockData, ChunkStorage, VoxelStorageRegion, VoxelWorldSlice};
 
 /// The return type for [`ChunkStorage::init_chunk`], for the purpose of
 /// chaining together actions.

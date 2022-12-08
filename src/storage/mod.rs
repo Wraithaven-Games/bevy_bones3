@@ -4,11 +4,12 @@
 //! Unloaded sections of the world must be loaded before they can be properly
 //! manipulated.
 
-mod init_chunk_result;
+mod events;
 mod voxel;
 mod world;
 mod world_slice;
 
+pub use events::*;
 pub use voxel::{BlockData, ChunkStorage, VoxelStorage, VoxelStorageRegion};
 pub use world::VoxelWorld;
 pub use world_slice::VoxelWorldSlice;

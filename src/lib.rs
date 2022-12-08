@@ -8,7 +8,6 @@
 #![warn(rustdoc::invalid_html_tags)]
 
 pub mod anchor;
-pub mod events;
 pub mod math;
 #[cfg(feature = "meshing")]
 pub mod meshing;
@@ -17,16 +16,14 @@ pub mod storage;
 use std::marker::PhantomData;
 
 use bevy::prelude::{App, Plugin};
-use events::{ChunkLoadEvent, ChunkUnloadEvent};
-use storage::{BlockData, VoxelWorld};
 
 use crate::anchor::{load_chunks, ChunkAnchor};
+use crate::storage::{BlockData, ChunkLoadEvent, ChunkUnloadEvent, VoxelWorld};
 
 /// Contains a re-export of all components and systems defined within this
 /// crate.
 pub mod prelude {
     pub use super::anchor::*;
-    pub use super::events::*;
     pub use super::math::*;
     #[cfg(feature = "meshing")]
     pub use super::meshing::*;
