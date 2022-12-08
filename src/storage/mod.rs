@@ -21,8 +21,7 @@ mod test {
     use pretty_assertions::{assert_eq, assert_ne};
 
     use super::*;
-    use crate::prelude::{ChunkLoadEvent, ChunkUnloadEvent};
-    use crate::Bones3Plugin;
+    use crate::prelude::{Bones3Plugin, ChunkLoadEvent, ChunkUnloadEvent};
 
     #[derive(Resource)]
     struct ChunkCoords(IVec3);

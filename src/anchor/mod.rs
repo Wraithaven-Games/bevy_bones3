@@ -14,9 +14,8 @@ mod test {
     use pretty_assertions::assert_eq;
 
     use super::*;
-    use crate::prelude::ChunkLoadEvent;
+    use crate::prelude::{Bones3Plugin, ChunkLoadEvent};
     use crate::storage::VoxelWorld;
-    use crate::Bones3Plugin;
 
     #[test]
     fn load_chunks() {
