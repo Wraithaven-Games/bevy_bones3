@@ -11,22 +11,24 @@ pub use systems::*;
 #[cfg(test)]
 mod test {
     use bevy::prelude::*;
+    use bevy_test_utils::TestApp;
     use pretty_assertions::assert_eq;
 
     use super::*;
-    use crate::prelude::{Bones3Plugin, ChunkLoadEvent};
+    use crate::prelude::ChunkLoadEvent;
     use crate::storage::VoxelWorld;
 
     #[test]
     fn load_chunks() {
         let mut app = App::new();
+        app.add_event::<ChunkLoadEvent>();
         app.add_plugins(MinimalPlugins);
-        app.add_plugin(Bones3Plugin::<4, u8>::default());
 
         let world = app
             .world
             .spawn((TransformBundle::default(), VoxelWorld::<u8>::default()))
             .id();
+
         app.world.spawn((
             Transform {
                 translation: Vec3::new(17.0, -2.0, 3.0),
@@ -35,7 +37,7 @@ mod test {
             ChunkAnchor::new(world, 2, 3),
         ));
 
-        app.update();
+        app.run_system_once(systems::load_chunks::<10, u8>);
 
         let load_chunk_ev = app.world.resource::<Events<ChunkLoadEvent>>();
         let mut load_chunk_reader = load_chunk_ev.get_reader();
