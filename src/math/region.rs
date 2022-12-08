@@ -185,8 +185,10 @@ mod test {
         let b = IVec3::new(-20, 4, -2);
         let region = Region::from_points(a, b);
 
-        let mut indices: Vec<usize> =
-            region.iter().map(|pos| region.point_to_index(pos).unwrap()).collect();
+        let mut indices: Vec<usize> = region
+            .iter()
+            .map(|pos| region.point_to_index(pos).unwrap())
+            .collect();
 
         indices.dedup();
 

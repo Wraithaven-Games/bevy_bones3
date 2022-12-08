@@ -42,9 +42,12 @@ impl<T: BlockData> VoxelWorldSlice<T> {
 }
 
 impl<T: BlockData> VoxelStorage<T> for VoxelWorldSlice<T> {
-    fn get_block(&self, block_coords: IVec3) -> Result<T> {
-        let index = self.region.point_to_index(block_coords)?;
-        Ok(self.blocks[index])
+    fn get_block(&self, block_coords: IVec3) -> T {
+        if let Ok(index) = self.region.point_to_index(block_coords) {
+            self.blocks[index]
+        } else {
+            T::default()
+        }
     }
 
     fn set_block(&mut self, block_coords: IVec3, data: T) -> Result<()> {

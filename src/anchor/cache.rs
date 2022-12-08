@@ -36,7 +36,9 @@ impl<const R: u8> ChunkLoaderCache<R> {
             .for_each(|n| n.priority = n.distance - n.pos.as_vec3().normalize().dot(weighted_dir));
 
         self.offsets.sort_unstable_by(|a, b| {
-            a.priority.partial_cmp(&b.priority).unwrap_or(Ordering::Equal)
+            a.priority
+                .partial_cmp(&b.priority)
+                .unwrap_or(Ordering::Equal)
         });
     }
 

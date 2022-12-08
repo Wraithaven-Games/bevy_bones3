@@ -15,7 +15,7 @@ impl<T: BlockData + BlockShape> RemeshChunk for VoxelWorld<T> {
         let blocks = self.get_slice(Region::from_points(region.min() - 1, region.max() + 1));
 
         for block_pos in region.iter() {
-            let data = blocks.get_block(block_pos).unwrap();
+            let data = blocks.get_block(block_pos);
             let Some(mut model_gen) = data.get_generator() else {
                 continue;
             };
@@ -23,7 +23,6 @@ impl<T: BlockData + BlockShape> RemeshChunk for VoxelWorld<T> {
             let check_occlusion = |occlusion: &mut BlockOcclusion, face: BlockOcclusion| {
                 if blocks
                     .get_block(block_pos + face.into_offset())
-                    .unwrap()
                     .get_occludes()
                     .contains(face.opposite_face())
                 {

@@ -24,7 +24,10 @@ mod test {
         app.add_plugins(MinimalPlugins);
         app.add_plugin(Bones3Plugin::<4, u8>::default());
 
-        let world = app.world.spawn((TransformBundle::default(), VoxelWorld::<u8>::default())).id();
+        let world = app
+            .world
+            .spawn((TransformBundle::default(), VoxelWorld::<u8>::default()))
+            .id();
         app.world.spawn((
             Transform {
                 translation: Vec3::new(17.0, -2.0, 3.0),

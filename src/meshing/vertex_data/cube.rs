@@ -116,7 +116,8 @@ impl BlockModelGenerator for CubeModelBuilder {
 
         let mut quad = |offset: usize| {
             let vertex_count = mesh.vertices.len() as u16;
-            mesh.indices.extend_from_slice(&QUAD_INDICES.map(|i| i + vertex_count));
+            mesh.indices
+                .extend_from_slice(&QUAD_INDICES.map(|i| i + vertex_count));
 
             for vert_data in CUBE_VERTICES.iter().skip(offset).take(4) {
                 let (vertex, normal, uv) = *vert_data;

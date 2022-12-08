@@ -3,9 +3,10 @@
 use anyhow::Result;
 use bevy::prelude::{Entity, EventWriter, IVec3};
 
+use super::init_chunk_result::InitChunkResult;
 use super::VoxelWorldSlice;
 use crate::math::Region;
-use crate::prelude::{ChunkLoadEvent, ChunkUnloadEvent};
+use crate::prelude::ChunkUnloadEvent;
 
 /// A blanket trait for data types that can be safely stored within a voxel
 /// world.
@@ -18,15 +19,16 @@ pub trait VoxelStorage<T: BlockData> {
     /// Gets the block data at the given block coordinates within this data
     /// container.
     ///
-    /// This function returns an error if the block coordinates lie outside of
-    /// the bounds of this container.
-    fn get_block(&self, block_coords: IVec3) -> Result<T>;
+    /// If the give block coordinates are outside of the bounds of this storage
+    /// container, or are within an unloaded chunk, then the default value
+    /// for T is returned.
+    fn get_block(&self, block_coords: IVec3) -> T;
 
     /// Sets the block data at the given block coordinates within this data
     /// container.
     ///
     /// This function returns an error if the block coordinates lie outside of
-    /// the bounds of this container.
+    /// the bounds of this container or are not in a fully loaded chunk.
     fn set_block(&mut self, block_coords: IVec3, data: T) -> Result<()>;
 }
 
@@ -45,18 +47,36 @@ pub trait VoxelStorageRegion<T: BlockData>: VoxelStorage<T> {
     /// If the indicated region intersects areas outside of the container, those
     /// locations within the returned region are set to the default value of T.
     fn get_slice(&self, region: Region) -> VoxelWorldSlice<T>;
+
+    /// Sets all blocks within a region of this voxel storage container based on
+    /// the corresponding data from the provided voxel world slice.
+    ///
+    /// This method is functionally identical to setting each block within the
+    /// region one by one, but is more performant for larger regions.
+    ///
+    /// This function will copy the data stored within the voxel world slice and
+    /// place that data within this voxel container at the same coordinate
+    /// location. If the provided world slice contains sections that are out
+    /// of bounds of this voxel container, an error is returned.
+    /// This functionality is similar to [`VoxelStorage::set_block`], where an
+    /// error will also be returned by attempting to edit blocks out of the
+    /// loaded world bounds.
+    fn fill_slice(&mut self, slice: VoxelWorldSlice<T>) -> Result<()>;
 }
 
 /// Defines that continuous chunks of data maybe be loaded and unloaded within
 /// this data container.
-pub trait ChunkStorage {
+pub trait ChunkStorage<W, T>
+where
+    W: ChunkStorage<W, T>,
+    T: BlockData, {
     /// Creates a new, empty chunk of block data at the given chunk coordinates
     /// within this data container.
     ///
     /// This function returns an error if the chunk coordinates lie outside of
     /// the bounds of this container, or if there is already a chunk loaded
     /// at the given chunk coordinates.
-    fn init_chunk(&mut self, chunk_coords: IVec3) -> InitChunkResult;
+    fn init_chunk(&mut self, chunk_coords: IVec3) -> InitChunkResult<W, T>;
 
     /// Unloads the chunk data at the given chunk coordinates.
     ///
@@ -73,49 +93,7 @@ pub trait ChunkStorage {
 
     /// Checks if there is currently a chunk loaded at the given chunk
     /// coordinates or not.
-    ///
-    /// This function returns true if there is a chunk present at the given
-    /// coordinates, and false if there is not. This function will return an
-    /// error if the chunk coordinates lie outside of the bounds of this
-    /// container.
-    fn is_chunk_loaded(&self, chunk_coords: IVec3) -> Result<bool>;
-}
-
-/// The return type for [`ChunkStorage::init_chunk`], for the purpose of
-/// chaining together actions.
-#[must_use]
-pub struct InitChunkResult(pub Result<IVec3>);
-
-impl InitChunkResult {
-    /// Triggers the chunk load event based on the results of the chunk_init
-    /// output.
-    ///
-    /// If the chunk_init function failed to load a new chunk, then no event is
-    /// triggered.
-    pub fn call_event(
-        self,
-        event_writer: &mut EventWriter<ChunkLoadEvent>,
-        world: Entity,
-    ) -> Result<()> {
-        match self.0 {
-            Ok(chunk_coords) => {
-                event_writer.send(ChunkLoadEvent {
-                    world,
-                    chunk_coords,
-                });
-                Ok(())
-            },
-            Err(err) => Err(err),
-        }
-    }
-
-    /// Converts this ChunkInitResult into a Result<()> type for error checking.
-    pub fn into_result(self) -> Result<()> {
-        match self.0 {
-            Ok(_) => Ok(()),
-            Err(e) => Err(e),
-        }
-    }
+    fn is_chunk_loaded(&self, chunk_coords: IVec3) -> bool;
 }
 
 /// The return type for [`ChunkStorage::unload_chunk`], for the purpose of

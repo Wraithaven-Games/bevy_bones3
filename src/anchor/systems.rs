@@ -25,7 +25,7 @@ pub fn load_chunks<const R: u8, T: BlockData>(
             cache.update_weighted_dir(anchor.weighted_dir);
 
             for chunk_coords in cache.iter(radius, center) {
-                if !world.is_chunk_loaded(chunk_coords).unwrap() {
+                if !world.is_chunk_loaded(chunk_coords) {
                     world
                         .init_chunk(chunk_coords)
                         .call_event(&mut chunk_load_ev, world_entity)

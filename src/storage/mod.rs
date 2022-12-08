@@ -4,8 +4,7 @@
 //! Unloaded sections of the world must be loaded before they can be properly
 //! manipulated.
 
-mod chunk;
-mod sector;
+mod init_chunk_result;
 mod voxel;
 mod world;
 mod world_slice;
@@ -33,10 +32,10 @@ mod test {
         let pos = IVec3::new(15, 128, -3);
 
         world.init_chunk(pos >> 4).into_result().unwrap();
-        assert_eq!(world.get_block(pos).unwrap(), 0);
+        assert_eq!(world.get_block(pos), 0);
 
         world.set_block(pos, 7).unwrap();
-        assert_eq!(world.get_block(pos).unwrap(), 7);
+        assert_eq!(world.get_block(pos), 7);
     }
 
     #[test]
@@ -48,7 +47,10 @@ mod test {
             mut chunk_load_ev: EventWriter<ChunkLoadEvent>,
         ) {
             let (entity, mut world) = world_query.single_mut();
-            world.init_chunk(coords.0).call_event(&mut chunk_load_ev, entity).unwrap();
+            world
+                .init_chunk(coords.0)
+                .call_event(&mut chunk_load_ev, entity)
+                .unwrap();
         }
 
         // Unload chunk system
@@ -58,7 +60,10 @@ mod test {
             mut chunk_unload_ev: EventWriter<ChunkUnloadEvent>,
         ) {
             let (entity, mut world) = world_query.single_mut();
-            world.unload_chunk(coords.0).call_event(&mut chunk_unload_ev, entity).unwrap();
+            world
+                .unload_chunk(coords.0)
+                .call_event(&mut chunk_unload_ev, entity)
+                .unwrap();
         }
 
         // Initialize our app

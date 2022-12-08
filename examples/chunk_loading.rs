@@ -186,6 +186,8 @@ fn unload_all_chunks(
 ) {
     if inputs.just_pressed(KeyCode::C) {
         let (world_entity, mut world) = world_query.single_mut();
-        world.unload_all_chunks().call_event(&mut chunk_unload_ev, world_entity);
+        world
+            .unload_all_chunks()
+            .call_event(&mut chunk_unload_ev, world_entity);
     }
 }
