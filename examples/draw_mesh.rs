@@ -35,7 +35,7 @@ fn main() {
             speed:       12.0,
         })
         .add_plugins(DefaultPlugins)
-        .add_plugin(Bones3Plugin::<10, BlockState>::default())
+        .add_plugin(Bones3Plugin::<BlockState>::default())
         .add_plugin(NoCameraPlayerPlugin)
         .add_startup_system(init)
         .run();

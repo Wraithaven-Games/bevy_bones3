@@ -38,7 +38,7 @@ fn main() {
         })
         .add_plugins(DefaultPlugins)
         .add_plugin(WireframePlugin)
-        .add_plugin(Bones3Plugin::<10, BlockState>::default())
+        .add_plugin(Bones3Plugin::<BlockState>::default())
         .add_plugin(NoCameraPlayerPlugin)
         .add_startup_system(init)
         .add_system(spawn_chunk_markers)
@@ -176,7 +176,7 @@ fn update_weighted_dir(
 ) {
     let (mut anchor, anchor_trans) = anchor_query.single_mut();
     let anchor_dir_trans = anchor_dir_query.single();
-    anchor.weighted_dir = (anchor_dir_trans.translation - anchor_trans.translation) / 32.0;
+    anchor.set_weighted_dir((anchor_dir_trans.translation - anchor_trans.translation) / 32.0);
 }
 
 fn unload_all_chunks(

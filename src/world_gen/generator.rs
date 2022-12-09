@@ -5,6 +5,7 @@ use std::marker::PhantomData;
 
 use bevy::prelude::{Component, Entity, IVec3};
 
+use crate::prelude::Region;
 use crate::storage::{BlockData, VoxelWorldSlice};
 
 /// A trait that handles the generation of block data when new chunks are
@@ -37,5 +38,16 @@ impl<T: BlockData, W: WorldGenerator<T>> WorldGeneratorHandler<T, W> {
             generator,
             _phantom: PhantomData::default(),
         }
+    }
+}
+
+/// An empty implementation of a world generator that always returns a voxel
+/// world slice filled with the default value for T.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Component, Default)]
+pub struct EmptyWorldGenerator;
+
+impl<T: BlockData> WorldGenerator<T> for EmptyWorldGenerator {
+    fn generate_chunk(&self, chunk_coords: IVec3) -> VoxelWorldSlice<T> {
+        VoxelWorldSlice::<T>::new(Region::CHUNK.shift(chunk_coords << 4))
     }
 }

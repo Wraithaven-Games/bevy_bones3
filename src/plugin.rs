@@ -26,7 +26,7 @@ use crate::prelude::*;
 /// default plugin setup. If multiple world generators are required, then the
 /// plugin must be manually constructed from components.
 #[derive(Debug, Default)]
-pub struct Bones3Plugin<T: BlockData, W: WorldGenerator<T>> {
+pub struct Bones3Plugin<T: BlockData, W: WorldGenerator<T> = EmptyWorldGenerator> {
     /// Phantom data for T.
     _phantom_t: PhantomData<T>,
 

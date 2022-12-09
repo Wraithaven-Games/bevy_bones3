@@ -10,5 +10,5 @@ mod generator;
 mod queue;
 
 pub use anchor::ChunkAnchor;
-pub use generator::{WorldGenerator, WorldGeneratorHandler};
+pub use generator::{EmptyWorldGenerator, WorldGenerator, WorldGeneratorHandler};
 pub use queue::{finish_chunk_loading, load_chunks_async};
