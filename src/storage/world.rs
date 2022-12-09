@@ -8,7 +8,7 @@ use anyhow::{anyhow, bail, Result};
 use bevy::prelude::*;
 
 use super::events::{InitChunkResult, UnloadAllChunksResult, UnloadChunkResult};
-use super::voxel::{ChunkStorage, VoxelStorage, VoxelStorageRegion};
+use super::voxel::{ChunkLoadState, ChunkStorage, VoxelStorage, VoxelStorageRegion};
 use super::{BlockData, VoxelWorldSlice};
 use crate::math::Region;
 
@@ -21,14 +21,18 @@ struct VoxelChunk<T: BlockData> {
 
     /// The coordinates of this chunk.
     chunk_coords: IVec3,
+
+    /// The current load state of this chunk.
+    load_state: ChunkLoadState,
 }
 
 impl<T: BlockData> VoxelChunk<T> {
     /// Creates a new voxel chunk at the given chunk coordinates.
-    fn new(chunk_coords: IVec3) -> Self {
+    fn new(chunk_coords: IVec3, load_state: ChunkLoadState) -> Self {
         Self {
             blocks: Box::new([default(); 4096]),
             chunk_coords,
+            load_state,
         }
     }
 }
@@ -180,7 +184,7 @@ impl<T: BlockData> VoxelStorageRegion<T> for VoxelWorld<T> {
 }
 
 impl<T: BlockData> ChunkStorage<VoxelWorld<T>, T> for VoxelWorld<T> {
-    fn init_chunk(&mut self, chunk_coords: IVec3) -> InitChunkResult<VoxelWorld<T>, T> {
+    fn prepare_chunk(&mut self, chunk_coords: IVec3) -> Result<()> {
         let sector_coords = chunk_coords >> 4;
         let sector = match self
             .sectors
@@ -196,14 +200,45 @@ impl<T: BlockData> ChunkStorage<VoxelWorld<T>, T> for VoxelWorld<T> {
 
         let chunk_index = Region::CHUNK.point_to_index(chunk_coords & 15).unwrap();
         if sector.chunks[chunk_index].is_some() {
-            return InitChunkResult::new(
-                self,
-                Err(anyhow!("Chunk ({}) already exists", chunk_coords)),
-                chunk_coords,
-            );
+            bail!("Chunk ({}) already exists", chunk_coords);
         }
 
-        sector.chunks[chunk_index] = Some(VoxelChunk::<T>::new(chunk_coords));
+        sector.chunks[chunk_index] =
+            Some(VoxelChunk::<T>::new(chunk_coords, ChunkLoadState::Loading));
+
+        Ok(())
+    }
+
+    fn init_chunk(&mut self, chunk_coords: IVec3) -> InitChunkResult<VoxelWorld<T>, T> {
+        let sector_coords = chunk_coords >> 4;
+        let sector = match self
+            .sectors
+            .iter_mut()
+            .find(|s| s.sector_coords == sector_coords)
+        {
+            Some(s) => s,
+            None => {
+                self.sectors.push(VoxelSector::new(sector_coords));
+                self.sectors.last_mut().unwrap()
+            },
+        };
+
+        let chunk_index = Region::CHUNK.point_to_index(chunk_coords & 15).unwrap();
+        if let Some(mut chunk) = sector.chunks[chunk_index].as_mut() {
+            if chunk.load_state == ChunkLoadState::Loaded {
+                return InitChunkResult::new(
+                    self,
+                    Err(anyhow!("Chunk ({}) already exists", chunk_coords)),
+                    chunk_coords,
+                );
+            }
+
+            chunk.load_state = ChunkLoadState::Loaded;
+        } else {
+            sector.chunks[chunk_index] =
+                Some(VoxelChunk::<T>::new(chunk_coords, ChunkLoadState::Loaded));
+        }
+
         InitChunkResult::new(self, Ok(()), chunk_coords)
     }
 
@@ -239,14 +274,18 @@ impl<T: BlockData> ChunkStorage<VoxelWorld<T>, T> for VoxelWorld<T> {
         UnloadAllChunksResult(chunk_list)
     }
 
-    fn is_chunk_loaded(&self, chunk_coords: IVec3) -> bool {
+    fn get_chunk_load_state(&self, chunk_coords: IVec3) -> ChunkLoadState {
         let sector_coords = chunk_coords >> 4;
         let Some(sector) = self.sectors.iter().find(|s| s.sector_coords == sector_coords) else {
-            return false;
+            return ChunkLoadState::Unloaded;
         };
 
         let chunk_index = Region::CHUNK.point_to_index(chunk_coords & 15).unwrap();
-        sector.chunks[chunk_index].is_some()
+        let Some(chunk) = &sector.chunks[chunk_index] else {
+            return ChunkLoadState::Unloaded;
+        };
+
+        chunk.load_state
     }
 }
 

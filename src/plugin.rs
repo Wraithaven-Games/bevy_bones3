@@ -5,8 +5,7 @@ use std::marker::PhantomData;
 
 use bevy::prelude::{App, Plugin};
 
-use crate::anchor::{load_chunks, ChunkAnchor};
-use crate::storage::{BlockData, ChunkLoadEvent, ChunkUnloadEvent, VoxelWorld};
+use crate::prelude::*;
 
 /// The root plugin for implementing all Bones Cubed logic components and
 /// systems.
@@ -23,23 +22,25 @@ use crate::storage::{BlockData, ChunkLoadEvent, ChunkUnloadEvent, VoxelWorld};
 /// and unload chunk based on the location and effect radius of chunk anchors
 /// within the world.
 ///
-/// Note that the "R" generic refers to the maximum radius that may be provided
-/// by a chunk anchor. This is used for internal cache purposes. Anchors are
-/// allowed to have a smaller value, but larger radius values will be ignored.
-/// The value R refers to the cache size, so larger values might add a higher
-/// memory and performance overhead.
+/// The W component here refers to the type of world generator to use in the
+/// default plugin setup. If multiple world generators are required, then the
+/// plugin must be manually constructed from components.
 #[derive(Debug, Default)]
-pub struct Bones3Plugin<const R: u8, T: BlockData> {
+pub struct Bones3Plugin<T: BlockData, W: WorldGenerator<T>> {
     /// Phantom data for T.
-    _phantom: PhantomData<T>,
+    _phantom_t: PhantomData<T>,
+
+    /// Phantom data for W.
+    _phantom_w: PhantomData<W>,
 }
 
-impl<const R: u8, T: BlockData> Plugin for Bones3Plugin<R, T> {
+impl<T: BlockData, W: WorldGenerator<T>> Plugin for Bones3Plugin<T, W> {
     fn build(&self, app: &mut App) {
         app.register_type::<VoxelWorld<T>>()
             .register_type::<ChunkAnchor>()
             .add_event::<ChunkLoadEvent>()
             .add_event::<ChunkUnloadEvent>()
-            .add_system(load_chunks::<R, T>);
+            .add_system(load_chunks_async::<T, W>)
+            .add_system(finish_chunk_loading::<T>);
     }
 }

@@ -7,20 +7,20 @@
 #![warn(rustdoc::invalid_codeblock_attributes)]
 #![warn(rustdoc::invalid_html_tags)]
 
-pub mod anchor;
 pub mod math;
 #[cfg(feature = "meshing")]
 pub mod meshing;
 pub mod plugin;
 pub mod storage;
+pub mod world_gen;
 
 /// Contains a re-export of all components and systems defined within this
 /// crate.
 pub mod prelude {
-    pub use super::anchor::*;
     pub use super::math::*;
     #[cfg(feature = "meshing")]
     pub use super::meshing::*;
     pub use super::plugin::*;
     pub use super::storage::*;
+    pub use super::world_gen::*;
 }

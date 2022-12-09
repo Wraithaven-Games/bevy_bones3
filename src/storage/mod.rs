@@ -10,7 +10,7 @@ mod world;
 mod world_slice;
 
 pub use events::*;
-pub use voxel::{BlockData, ChunkStorage, VoxelStorage, VoxelStorageRegion};
+pub use voxel::{BlockData, ChunkLoadState, ChunkStorage, VoxelStorage, VoxelStorageRegion};
 pub use world::VoxelWorld;
 pub use world_slice::VoxelWorldSlice;
 
