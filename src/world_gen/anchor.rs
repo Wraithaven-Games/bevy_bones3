@@ -1,9 +1,7 @@
 //! This module contains the Bevy component that implements the chunk anchor.
 
-use std::cmp::Ordering;
-
 use bevy::prelude::*;
-use itertools::Itertools;
+use ordered_float::OrderedFloat;
 
 use crate::prelude::Region;
 
@@ -159,17 +157,15 @@ impl ChunkAnchor {
     /// also mark the chunk anchor as up-to-date, and will cause all future
     /// iterator calls to return empty until the chunk anchor has moved to a
     /// new chunk.
-    pub fn iter(&mut self, center: IVec3) -> impl Iterator<Item = IVec3> {
+    pub fn iter(&mut self, center: IVec3) -> impl Iterator<Item = (IVec3, OrderedFloat<f32>)> + '_ {
         let radius = self.radius as i32;
         Region::from_points(center - radius, center + radius)
-            .iter()
-            .map(|c| {
+            .into_iter()
+            .map(move |c| {
                 let distance = c.as_vec3().distance(center.as_vec3());
                 let view_dir = (c - center).as_vec3().normalize();
                 let weight = view_dir.dot(self.weighted_dir);
-                (c, distance - weight)
+                (c, OrderedFloat(distance - weight))
             })
-            .sorted_unstable_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal))
-            .map(|c| c.0)
     }
 }

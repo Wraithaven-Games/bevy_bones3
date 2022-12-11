@@ -41,6 +41,7 @@ impl<T: BlockData, W: WorldGenerator<T>> Plugin for Bones3Plugin<T, W> {
             .add_event::<ChunkLoadEvent>()
             .add_event::<ChunkUnloadEvent>()
             .add_system(load_chunks_async::<T, W>)
+            .add_system(push_chunk_async_queue::<T, W, 2>)
             .add_system(finish_chunk_loading::<T>);
     }
 }
