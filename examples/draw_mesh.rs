@@ -72,7 +72,10 @@ fn init(
         }
     }
 
-    let mesh = voxel_world.generate_mesh(Region::CHUNK).into_mesh();
+    let mesh = voxel_world
+        .generate_mesh(Region::CHUNK)
+        .into_mesh()
+        .unwrap();
     commands.spawn(PbrBundle {
         mesh: meshes.add(mesh),
         material: materials.add(Color::rgb(0.0, 0.4, 0.1).into()),

@@ -1,5 +1,6 @@
 //! Defines how a block model should be added to a chunk mesh.
 
+use anyhow::{bail, Result};
 use bevy::prelude::{IVec3, Mesh, Vec2, Vec3};
 use bevy::render::mesh::Indices;
 use bevy::render::render_resource::PrimitiveTopology;
@@ -126,28 +127,36 @@ pub struct TempMesh {
 impl TempMesh {
     /// Contains this temporary mesh into a Bevy mesh.
     ///
-    /// The resulting mesh is laid out using a triangle list topology.
-    pub fn into_mesh(self) -> Mesh {
+    /// The resulting mesh is laid out using a triangle list topology. This
+    /// method returns an error if this temporary mesh data is empty.
+    pub fn into_mesh(self) -> Result<Mesh> {
         let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
-        self.write_to_mesh(&mut mesh);
-        mesh
+        self.write_to_mesh(&mut mesh)?;
+        Ok(mesh)
     }
 
     /// Writes the data from this temporary mesh into an existing Bevy mesh.
     ///
-    /// The input mesh is assumed to use a triangle list topology.
-    pub fn write_to_mesh(self, mesh: &mut Mesh) {
-        debug_assert! {
-            mesh.primitive_topology() == PrimitiveTopology::TriangleList,
-            "Mesh does not use a triangle list topology"
-        };
+    /// This method returns an error if the provided mesh does not use the
+    /// triangle list primitive topology, or if this temporary mesh data is
+    /// empty.
+    pub fn write_to_mesh(self, mesh: &mut Mesh) -> Result<()> {
+        if mesh.primitive_topology() != PrimitiveTopology::TriangleList {
+            bail!("Mesh does not use a triangle list topology");
+        }
+
+        if self.is_empty() {
+            bail!("Mesh data is empty");
+        }
 
         mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, self.vertices);
         mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, self.normals);
         mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, self.uvs);
         mesh.set_indices(Some(Indices::U16(self.indices)));
         mesh.compute_aabb();
-        mesh.generate_tangents().unwrap(); // TODO Move this to vertex data
+        mesh.generate_tangents().unwrap();
+
+        Ok(())
     }
 
     /// Checks if this temporary mesh is empty or not.
