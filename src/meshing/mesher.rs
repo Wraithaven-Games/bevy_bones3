@@ -18,15 +18,16 @@ pub struct RemeshChunk;
 /// `needs_remesh` set to true.
 pub fn remesh_dirty_chunks<T>(
     shapes: VoxelQuery<&VoxelStorage<T>>,
-    dirty_chunks: VoxelQuery<(&Handle<Mesh>, &VoxelChunk), With<RemeshChunk>>,
+    dirty_chunks: VoxelQuery<(Entity, &VoxelChunk, &Handle<Mesh>), With<RemeshChunk>>,
     mut meshes: ResMut<Assets<Mesh>>,
+    mut commands: Commands,
 ) where
     T: BlockData + BlockShape,
 {
-    for (mesh_handle, chunk) in dirty_chunks.iter() {
-        let world_id = chunk.world_id();
+    for (chunk_id, chunk_meta, mesh_handle) in dirty_chunks.iter() {
+        let world_id = chunk_meta.world_id();
 
-        let chunk_coords = chunk.chunk_coords();
+        let chunk_coords = chunk_meta.chunk_coords();
         let data_region = Region::from_points(IVec3::NEG_ONE, IVec3::ONE);
 
         let data = data_region
@@ -73,5 +74,7 @@ pub fn remesh_dirty_chunks<T>(
 
         let bevy_mesh = meshes.get_mut(mesh_handle).unwrap();
         mesh.write_to_mesh(bevy_mesh).unwrap();
+
+        commands.entity(chunk_id).remove::<RemeshChunk>();
     }
 }
