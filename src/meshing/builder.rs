@@ -21,6 +21,9 @@ where
     T: BlockData + BlockShape,
     G: Fn(IVec3) -> T,
 {
+    #[cfg(feature = "trace")]
+    let profiler_guard = info_span!("remesh_chunk", target = "build_mesh").entered();
+
     let mut mesh = TempMesh::default();
     for block_pos in Region::CHUNK.iter() {
         let data = get_block(block_pos);
@@ -49,6 +52,9 @@ where
         model_gen.set_occlusion(occlusion);
         model_gen.write_to_mesh(&mut mesh);
     }
+
+    #[cfg(feature = "trace")]
+    profiler_guard.exit();
 
     mesh
 }

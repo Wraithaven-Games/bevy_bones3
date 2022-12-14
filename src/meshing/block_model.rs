@@ -146,7 +146,12 @@ impl TempMesh {
         }
 
         if self.is_empty() {
+            mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, vec![[0.0; 3]; 0]);
+            mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, vec![[0.0; 3]; 0]);
+            mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, vec![[0.0; 2]; 0]);
+            mesh.insert_attribute(Mesh::ATTRIBUTE_TANGENT, vec![[0.0; 4]; 0]);
             mesh.set_indices(None);
+            mesh.compute_aabb();
             return Ok(());
         }
 

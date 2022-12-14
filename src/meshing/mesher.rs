@@ -19,20 +19,29 @@ pub struct RemeshChunk;
 pub fn remesh_dirty_chunks<T>(
     camera: Query<&Transform, With<Camera3d>>,
     shapes: VoxelQuery<&VoxelStorage<T>>,
-    dirty_chunks: VoxelQuery<(Entity, &VoxelChunk, &Handle<Mesh>), With<RemeshChunk>>,
+    mut dirty_chunks: VoxelQuery<
+        (Entity, &VoxelChunk, &Handle<Mesh>, Option<&mut Visibility>),
+        With<RemeshChunk>,
+    >,
     mut meshes: ResMut<Assets<Mesh>>,
     mut commands: Commands,
 ) where
     T: BlockData + BlockShape,
 {
+    #[cfg(feature = "trace")]
+    let profiler_guard = info_span!("remesh_chunk", target = "find_next_chunk").entered();
+
     // TODO: Improve priority calculation compatibility.
     let camera_pos: IVec3 = camera.single().translation.as_ivec3() >> 4;
-    let next_chunk = dirty_chunks.iter().max_by_key(|(_, meta, _)| {
+    let next_chunk = dirty_chunks.iter_mut().max_by_key(|(_, meta, ..)| {
         let distance = (meta.chunk_coords() - camera_pos).as_vec3().length();
         OrderedFloat(-distance)
     });
 
-    let Some((chunk_id, chunk_meta, mesh_handle)) = next_chunk else {
+    #[cfg(feature = "trace")]
+    profiler_guard.exit();
+
+    let Some((chunk_id, chunk_meta, mesh_handle, visibility)) = next_chunk else {
         return;
     };
 
@@ -40,10 +49,12 @@ pub fn remesh_dirty_chunks<T>(
     let chunk_coords = chunk_meta.chunk_coords();
     let data_region = Region::from_points(IVec3::NEG_ONE, IVec3::ONE);
 
+    let profiler_guard = info_span!("remesh_chunk", target = "collect_block_data").entered();
     let data = data_region
         .iter()
         .map(|offset| shapes.get_chunk(world_id, chunk_coords + offset).ok())
         .collect::<Vec<Option<&VoxelStorage<T>>>>();
+    profiler_guard.exit();
 
     let get_block = |block_pos: IVec3| {
         let chunk_index = data_region.point_to_index(block_pos >> 4).unwrap();
@@ -53,9 +64,19 @@ pub fn remesh_dirty_chunks<T>(
         }
     };
 
+    #[cfg(feature = "trace")]
+    let profiler_guard = info_span!("remesh_chunk", target = "update_mesh").entered();
+
     let mesh = builder::build_chunk_mesh(get_block);
+    if let Some(mut v) = visibility {
+        v.is_visible = !mesh.is_empty();
+    }
+
     let bevy_mesh = meshes.get_mut(mesh_handle).unwrap();
     mesh.write_to_mesh(bevy_mesh).unwrap();
+
+    #[cfg(feature = "trace")]
+    profiler_guard.exit();
 
     commands.entity(chunk_id).remove::<RemeshChunk>();
 }

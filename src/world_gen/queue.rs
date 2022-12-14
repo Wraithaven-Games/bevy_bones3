@@ -47,6 +47,9 @@ pub fn load_chunks_async<T>(
             continue;
         };
 
+        #[cfg(feature = "trace")]
+        let profiler_guard = info_span!("world_gen", target = "find_new_chunks").entered();
+
         let anchor_pos = transform.translation.as_ivec3() >> 4;
         for chunk_coords in anchor.iter(anchor_pos) {
             if chunks.get_chunk(world_id, chunk_coords).is_err() {
@@ -56,6 +59,9 @@ pub fn load_chunks_async<T>(
                     .spawn_chunk(chunk_coords, PendingLoadChunkTask);
             };
         }
+
+        #[cfg(feature = "trace")]
+        profiler_guard.exit();
     }
 }
 
@@ -79,6 +85,9 @@ pub fn push_chunk_async_queue<T>(
         return;
     }
 
+    #[cfg(feature = "trace")]
+    let profiler_guard = info_span!("world_gen", target = "find_next_pending_chunk").entered();
+
     let next_chunk = pending_tasks.iter().max_by_key(|q| {
         let mut priority = f32::NEG_INFINITY;
 
@@ -91,15 +100,16 @@ pub fn push_chunk_async_queue<T>(
         OrderedFloat(priority)
     });
 
+    #[cfg(feature = "trace")]
+    profiler_guard.exit();
+
     let Some((chunk_id, pending_task)) = next_chunk else {
         return;
     };
 
     let world_id = pending_task.world_id();
     let chunk_coords = pending_task.chunk_coords();
-
-    let generator = generators.get(world_id).ok().map(|g| g.generator());
-    match generator {
+    match generators.get(world_id).ok().map(|g| g.generator()) {
         Some(gen) => {
             let pool = AsyncComputeTaskPool::get();
             let task = pool.spawn(async move { gen.generate_chunk(chunk_coords) });
@@ -125,6 +135,9 @@ pub fn finish_chunk_loading<T: BlockData>(
     mut load_chunk_tasks: Query<(Entity, &mut LoadChunkTask<T>, &VoxelChunk)>,
     mut commands: Commands,
 ) {
+    #[cfg(feature = "trace")]
+    let profiler_guard = info_span!("world_gen", target = "finalize_chunks").entered();
+
     for (chunk_id, mut task, chunk_meta) in load_chunk_tasks.iter_mut() {
         let Some(chunk_data) = future::block_on(future::poll_once(&mut task.0)) else {
             continue;
@@ -140,4 +153,7 @@ pub fn finish_chunk_loading<T: BlockData>(
             .remesh_chunk_neighbors(chunk_meta.world_id(), chunk_meta.chunk_coords())
             .unwrap();
     }
+
+    #[cfg(feature = "trace")]
+    profiler_guard.exit();
 }
