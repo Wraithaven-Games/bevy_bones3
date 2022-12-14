@@ -4,7 +4,6 @@
 use bevy::prelude::*;
 use bevy::tasks::{AsyncComputeTaskPool, Task};
 use futures_lite::future;
-use itertools::Itertools;
 use ordered_float::OrderedFloat;
 
 use super::{ChunkAnchor, WorldGeneratorHandler};
@@ -83,12 +82,7 @@ pub fn push_chunk_async_queue<T>(
         return;
     }
 
-    let pool = AsyncComputeTaskPool::get();
-
-    // TODO Replace `sorted_unstable_by_key` with `k_smallest_by` when it becomes
-    // available. It'll be much more efficient than sorting the entire list and
-    // grabbing only 2 or 3.
-    let tasks = pending_tasks
+    let next_chunk = pending_tasks
         .iter()
         .map(|q| {
             let mut priority = f32::INFINITY;
@@ -101,18 +95,17 @@ pub fn push_chunk_async_queue<T>(
 
             (q, OrderedFloat(priority))
         })
-        .sorted_unstable_by_key(|q| q.1)
-        .take(available_slots as usize)
+        .min_by_key(|q| q.1)
         .map(|(q, _)| q);
 
-    for (chunk_id, pending_task) in tasks {
+    if let Some((chunk_id, pending_task)) = next_chunk {
         let world_id = pending_task.world_id();
         let chunk_coords = pending_task.chunk_coords();
 
         let generator = generators.get(world_id).ok().map(|g| g.generator());
-
         match generator {
             Some(gen) => {
+                let pool = AsyncComputeTaskPool::get();
                 let task = pool.spawn(async move { gen.generate_chunk(chunk_coords) });
                 commands
                     .entity(chunk_id)
