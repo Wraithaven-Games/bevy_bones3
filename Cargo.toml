@@ -34,4 +34,8 @@ opt-level = 1
 opt-level = 3
 
 [features]
-meshing = ["bevy/render"]
+meshing = ["bevy/render", "bevy/bevy_asset"]
+
+[[example]]
+name = "terrain"
+required-features = ["meshing"]

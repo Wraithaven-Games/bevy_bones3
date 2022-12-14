@@ -1,53 +1,44 @@
 //! This module defines the world generator trait and how it should be
 //! implemented.
 
-use std::marker::PhantomData;
+use std::sync::Arc;
 
-use bevy::prelude::{Component, Entity, IVec3};
+use bevy::prelude::*;
 
-use crate::prelude::Region;
-use crate::storage::{BlockData, VoxelWorldSlice};
+use crate::storage::{BlockData, VoxelStorage};
 
 /// A trait that handles the generation of block data when new chunks are
 /// loaded.
-pub trait WorldGenerator<T: BlockData>: Copy + Send + Sync + 'static {
+pub trait WorldGenerator<T>
+where
+    T: BlockData,
+    Self: Send + Sync,
+{
     /// Generates a voxel world slice containing the block data to populate a
     /// newly generated chunk at the given chunk coordinates.
-    fn generate_chunk(&self, chunk_coords: IVec3) -> VoxelWorldSlice<T>;
+    fn generate_chunk(&self, chunk_coords: IVec3) -> VoxelStorage<T>;
 }
 
-/// A component that holds a world generator.
-#[derive(Debug, Clone, Component)]
-pub struct WorldGeneratorHandler<T: BlockData, W: WorldGenerator<T>> {
-    /// The entity of the world that this world generator is targeting.
-    pub world: Option<Entity>,
+/// A component wrapper for storing a WorldGenerator object.
+#[derive(Component, Reflect)]
+pub struct WorldGeneratorHandler<T>(#[reflect(ignore)] Arc<dyn WorldGenerator<T>>)
+where
+    T: BlockData;
 
-    /// The world generator instance.
-    pub generator: W,
-
-    /// Phantom data for T.
-    _phantom: PhantomData<T>,
-}
-
-impl<T: BlockData, W: WorldGenerator<T>> WorldGeneratorHandler<T, W> {
-    /// Creates a new world generator handler instance for the given world and
-    /// generator.
-    pub fn new(world: Entity, generator: W) -> Self {
-        Self {
-            world: Some(world),
-            generator,
-            _phantom: PhantomData::default(),
-        }
+impl<T> WorldGeneratorHandler<T>
+where
+    T: BlockData,
+{
+    /// Creates a new WorldGeneratorHandler instance.
+    pub fn from<G>(generator: G) -> Self
+    where
+        G: WorldGenerator<T> + 'static,
+    {
+        Self(Arc::new(generator))
     }
-}
 
-/// An empty implementation of a world generator that always returns a voxel
-/// world slice filled with the default value for T.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Component, Default)]
-pub struct EmptyWorldGenerator;
-
-impl<T: BlockData> WorldGenerator<T> for EmptyWorldGenerator {
-    fn generate_chunk(&self, chunk_coords: IVec3) -> VoxelWorldSlice<T> {
-        VoxelWorldSlice::<T>::new(Region::CHUNK.shift(chunk_coords << 4))
+    /// Gets a reference to the world generator instance.
+    pub fn generator(&self) -> Arc<dyn WorldGenerator<T>> {
+        self.0.clone()
     }
 }

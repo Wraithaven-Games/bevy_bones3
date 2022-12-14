@@ -1,3 +1,4 @@
+use bevy::math::Vec3Swizzles;
 use bevy::prelude::*;
 use bevy_bones3::prelude::*;
 use bevy_flycam::{FlyCam, MovementSettings, NoCameraPlayerPlugin};
@@ -26,27 +27,27 @@ impl BlockShape for BlockState {
     }
 }
 
-#[derive(Debug, Clone, Copy, Default)]
-struct Terrain {}
+#[derive(Clone, Copy, Reflect, Default)]
+struct Terrain;
 
 impl WorldGenerator<BlockState> for Terrain {
-    fn generate_chunk(&self, chunk_coords: IVec3) -> VoxelWorldSlice<BlockState> {
-        let region = Region::CHUNK.shift(chunk_coords << 4);
-        let mut slice = VoxelWorldSlice::<BlockState>::new(region);
+    fn generate_chunk(&self, chunk_coords: IVec3) -> VoxelStorage<BlockState> {
+        let mut storage = VoxelStorage::<BlockState>::default();
 
         let perlin = Perlin::new(27);
-        for block_coords in region.iter() {
-            let perlin_coords = [block_coords.x as f64 / 64.0, block_coords.z as f64 / 64.0];
-            let height = perlin.get(perlin_coords) * 16.0 - 10.0;
+        for local_pos in Region::CHUNK.iter() {
+            let block_coords: IVec3 = (chunk_coords << 4) + local_pos;
+            let pos = block_coords.xz().as_dvec2() / 64.0_f64;
+            let height = perlin.get(pos.into()) * 16.0 - 10.0;
 
             if block_coords.y >= height as i32 {
-                slice.set_block(block_coords, BlockState::Empty).unwrap();
+                storage.set_block(local_pos, BlockState::Empty);
             } else {
-                slice.set_block(block_coords, BlockState::Solid).unwrap();
+                storage.set_block(local_pos, BlockState::Solid);
             }
         }
 
-        slice
+        storage
     }
 }
 
@@ -64,10 +65,11 @@ fn main() {
             brightness: 2.5,
         })
         .add_plugins(DefaultPlugins)
-        .add_plugin(Bones3Plugin::<BlockState, Terrain>::default())
+        .add_plugin(Bones3Plugin)
+        .add_plugin(Bones3BlockTypePlugin::<BlockState>::default())
+        .add_plugin(Bones3MeshingPlugin::<BlockState>::default())
         .add_plugin(NoCameraPlayerPlugin)
         .add_startup_system(init)
-        .add_system(gen_chunk_meshes::<BlockState>)
         .run();
 }
 
@@ -84,17 +86,12 @@ fn init(mut commands: Commands) {
 
     // voxel world
     let world = commands
-        .spawn((
+        .spawn_world::<BlockState, _>((
             SpatialBundle::default(),
-            VoxelWorld::<BlockState>::default(),
+            RemeshWorld,
+            WorldGeneratorHandler::from(Terrain),
         ))
         .id();
-
-    // terrain generator
-    commands.spawn(WorldGeneratorHandler::<BlockState, Terrain>::new(
-        world,
-        Terrain::default(),
-    ));
 
     // player
     commands.spawn((
@@ -104,35 +101,35 @@ fn init(mut commands: Commands) {
     ));
 }
 
-fn gen_chunk_meshes<T: BlockData + BlockShape>(
-    worlds: Query<&VoxelWorld<T>>,
-    mut commands: Commands,
-    mut chunk_load_ev: EventReader<ChunkLoadEvent>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    for event in chunk_load_ev.iter() {
-        let world = worlds.get(event.world).unwrap();
+// fn gen_chunk_meshes<T: BlockData + BlockShape>(
+//     worlds: Query<&VoxelWorld<T>>,
+//     mut commands: Commands,
+//     mut chunk_load_ev: EventReader<ChunkLoadEvent>,
+//     mut meshes: ResMut<Assets<Mesh>>,
+//     mut materials: ResMut<Assets<StandardMaterial>>,
+// ) {
+//     for event in chunk_load_ev.iter() {
+//         let world = worlds.get(event.world).unwrap();
 
-        let pos = event.chunk_coords.as_vec3() * 16.0;
-        let region = Region::CHUNK.shift(event.chunk_coords << 4);
-        let Ok(mesh) = world.generate_mesh(region).into_mesh() else {
-            continue;
-        };
+//         let pos = event.chunk_coords.as_vec3() * 16.0;
+//         let region = Region::CHUNK.shift(event.chunk_coords << 4);
+//         let Ok(mesh) = world.generate_mesh(region).into_mesh() else {
+//             continue;
+//         };
 
-        let mut material: StandardMaterial = Color::rgb(0.0, 0.4, 0.1).into();
-        material.perceptual_roughness = 0.95;
-        material.reflectance = 0.0;
+//         let mut material: StandardMaterial = Color::rgb(0.0, 0.4,
+// 0.1).into();         material.perceptual_roughness = 0.95;
+//         material.reflectance = 0.0;
 
-        let chunk = commands
-            .spawn(PbrBundle {
-                mesh: meshes.add(mesh),
-                material: materials.add(material),
-                transform: Transform::from_translation(pos),
-                ..default()
-            })
-            .id();
+//         let chunk = commands
+//             .spawn(PbrBundle {
+//                 mesh: meshes.add(mesh),
+//                 material: materials.add(material),
+//                 transform: Transform::from_translation(pos),
+//                 ..default()
+//             })
+//             .id();
 
-        commands.entity(event.world).add_child(chunk);
-    }
-}
+//         commands.entity(event.world).add_child(chunk);
+//     }
+// }

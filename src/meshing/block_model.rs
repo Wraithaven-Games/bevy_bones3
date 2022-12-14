@@ -129,10 +129,10 @@ impl TempMesh {
     ///
     /// The resulting mesh is laid out using a triangle list topology. This
     /// method returns an error if this temporary mesh data is empty.
-    pub fn into_mesh(self) -> Result<Mesh> {
+    pub fn into_mesh(self) -> Mesh {
         let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
-        self.write_to_mesh(&mut mesh)?;
-        Ok(mesh)
+        self.write_to_mesh(&mut mesh).unwrap();
+        mesh
     }
 
     /// Writes the data from this temporary mesh into an existing Bevy mesh.
@@ -146,7 +146,8 @@ impl TempMesh {
         }
 
         if self.is_empty() {
-            bail!("Mesh data is empty");
+            mesh.set_indices(None);
+            return Ok(());
         }
 
         mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, self.vertices);

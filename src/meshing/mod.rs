@@ -6,8 +6,10 @@
 
 mod block_model;
 mod mesher;
+mod prep_chunks;
 mod vertex_data;
 
-pub use block_model::{BlockModelGenerator, BlockOcclusion, BlockShape, TempMesh};
-pub use mesher::RemeshChunk;
-pub use vertex_data::CubeModelBuilder;
+pub use block_model::*;
+pub use mesher::*;
+pub use prep_chunks::*;
+pub use vertex_data::*;

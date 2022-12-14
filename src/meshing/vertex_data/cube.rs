@@ -17,7 +17,7 @@ use crate::meshing::block_model::{BlockModelGenerator, BlockOcclusion, TempMesh}
 /// order: -X, +X, -Y, +Y, -Z, +Z. In addition, each face group uses a quad
 /// index layout, as determined by [`QUAD_INDICES`].
 #[rustfmt::skip]
-pub const CUBE_VERTICES: [(Vec3, Vec3, Vec2); 24] = [
+const CUBE_VERTICES: [(Vec3, Vec3, Vec2); 24] = [
     // -X
     (Vec3::new(0.0, 0.0, 0.0), Vec3::new(-1., 0.0, 0.0), Vec2::new(0.0, 0.0)),
     (Vec3::new(0.0, 0.0, 1.0), Vec3::new(-1., 0.0, 0.0), Vec2::new(0.0, 1.0)),
@@ -52,7 +52,7 @@ pub const CUBE_VERTICES: [(Vec3, Vec3, Vec2); 24] = [
 
 /// The relative indices that are used to indicate how the vertices of a quad
 /// are applied to write to a mesh with the TriangleList topology.
-pub const QUAD_INDICES: [u16; 6] = [0, 1, 2, 0, 2, 3];
+const QUAD_INDICES: [u16; 6] = [0, 1, 2, 0, 2, 3];
 
 /// A block model builder for a cube.
 ///

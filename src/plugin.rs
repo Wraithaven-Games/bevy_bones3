@@ -3,7 +3,7 @@
 
 use std::marker::PhantomData;
 
-use bevy::prelude::{App, Plugin};
+use bevy::prelude::*;
 
 use crate::prelude::*;
 
@@ -25,23 +25,68 @@ use crate::prelude::*;
 /// The W component here refers to the type of world generator to use in the
 /// default plugin setup. If multiple world generators are required, then the
 /// plugin must be manually constructed from components.
-#[derive(Debug, Default)]
-pub struct Bones3Plugin<T: BlockData, W: WorldGenerator<T> = EmptyWorldGenerator> {
-    /// Phantom data for T.
-    _phantom_t: PhantomData<T>,
+pub struct Bones3Plugin;
 
-    /// Phantom data for W.
-    _phantom_w: PhantomData<W>,
+impl Plugin for Bones3Plugin {
+    fn build(&self, app: &mut App) {
+        app
+            // Storage
+            .register_type::<VoxelWorld>()
+            .register_type::<VoxelChunk>()
+            // World Gen
+            .register_type::<ChunkAnchor>()
+            .register_type::<PendingLoadChunkTask>()
+            .add_system(setup_chunk_transforms)
+            // Query
+            .register_type::<ChunkEntityPointers>();
+    }
 }
 
-impl<T: BlockData, W: WorldGenerator<T>> Plugin for Bones3Plugin<T, W> {
+/// This is an addon plugin for Bones3 that adds support for a specific block
+/// type.
+///
+/// This is required for storing block data, world generation, and so on. One
+/// instance of this plugin must be created for each new instance of a block
+/// data type that is required.
+#[derive(Default)]
+pub struct Bones3BlockTypePlugin<T>(PhantomData<T>)
+where
+    T: BlockData;
+
+impl<T> Plugin for Bones3BlockTypePlugin<T>
+where
+    T: BlockData,
+{
     fn build(&self, app: &mut App) {
-        app.register_type::<VoxelWorld<T>>()
-            .register_type::<ChunkAnchor>()
-            .add_event::<ChunkLoadEvent>()
-            .add_event::<ChunkUnloadEvent>()
-            .add_system(load_chunks_async::<T, W>)
-            .add_system(push_chunk_async_queue::<T, W, 2>)
+        app
+            // Storage
+            .register_type::<VoxelStorage<T>>()
+            // World Gen
+            .register_type::<LoadChunkTask<T>>()
+            .register_type::<WorldGeneratorHandler<T>>()
+            .add_system(load_chunks_async::<T>)
+            .add_system(push_chunk_async_queue::<T>)
             .add_system(finish_chunk_loading::<T>);
+    }
+}
+
+/// This is an addon plugin for Bones3 that adds remesh support for chunks.
+///
+/// This plugin requires the `meshing` feature of Bones3 to be enabled.
+#[derive(Default)]
+#[cfg(feature = "meshing")]
+pub struct Bones3MeshingPlugin<T>(PhantomData<T>)
+where
+    T: BlockData + BlockShape;
+
+impl<T> Plugin for Bones3MeshingPlugin<T>
+where
+    T: BlockData + BlockShape,
+{
+    fn build(&self, app: &mut App) {
+        app.register_type::<RemeshChunk>()
+            .register_type::<RemeshWorld>()
+            .add_system(remesh_dirty_chunks::<T>)
+            .add_system(setup_chunk_meshes);
     }
 }

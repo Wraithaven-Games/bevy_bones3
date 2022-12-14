@@ -1,7 +1,6 @@
 //! This module contains the Bevy component that implements the chunk anchor.
 
 use bevy::prelude::*;
-use ordered_float::OrderedFloat;
 
 use crate::prelude::Region;
 
@@ -157,15 +156,25 @@ impl ChunkAnchor {
     /// also mark the chunk anchor as up-to-date, and will cause all future
     /// iterator calls to return empty until the chunk anchor has moved to a
     /// new chunk.
-    pub fn iter(&mut self, center: IVec3) -> impl Iterator<Item = (IVec3, OrderedFloat<f32>)> + '_ {
+    pub fn iter(&mut self, center: IVec3) -> impl Iterator<Item = IVec3> + '_ {
         let radius = self.radius as i32;
-        Region::from_points(center - radius, center + radius)
-            .into_iter()
-            .map(move |c| {
-                let distance = c.as_vec3().distance(center.as_vec3());
-                let view_dir = (c - center).as_vec3().normalize();
-                let weight = view_dir.dot(self.weighted_dir);
-                (c, OrderedFloat(distance - weight))
-            })
+        Region::from_points(center - radius, center + radius).into_iter()
+    }
+
+    /// Gets the chunk priority of the target chunk.
+    ///
+    /// This function calculates what the priority value of loading the target
+    /// would be based on the position of the target and the current status of
+    /// this chunk anchor. If the target is outside of the load radius of
+    /// this chunk anchor, the returned value is infinity.
+    pub fn get_priority(&self, pos: IVec3, target: IVec3) -> f32 {
+        let distance = target.as_vec3().distance(pos.as_vec3());
+        if distance > self.radius as f32 {
+            return f32::INFINITY;
+        }
+
+        let view_dir = (target - pos).as_vec3().normalize();
+        let weight = view_dir.dot(self.weighted_dir);
+        distance - weight
     }
 }
