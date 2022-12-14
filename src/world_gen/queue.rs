@@ -82,21 +82,17 @@ pub fn push_chunk_async_queue<T>(
         return;
     }
 
-    let next_chunk = pending_tasks
-        .iter()
-        .map(|q| {
-            let mut priority = f32::INFINITY;
+    let next_chunk = pending_tasks.iter().min_by_key(|q| {
+        let mut priority = f32::INFINITY;
 
-            for (transform, anchor) in anchors.iter() {
-                let pos = transform.translation.as_ivec3() >> 4;
-                let anchor_priority = anchor.get_priority(pos, q.1.chunk_coords());
-                priority = f32::min(priority, anchor_priority);
-            }
+        for (transform, anchor) in anchors.iter() {
+            let pos = transform.translation.as_ivec3() >> 4;
+            let anchor_priority = anchor.get_priority(pos, q.1.chunk_coords());
+            priority = f32::min(priority, anchor_priority);
+        }
 
-            (q, OrderedFloat(priority))
-        })
-        .min_by_key(|q| q.1)
-        .map(|(q, _)| q);
+        OrderedFloat(priority)
+    });
 
     if let Some((chunk_id, pending_task)) = next_chunk {
         let world_id = pending_task.world_id();
