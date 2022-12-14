@@ -5,6 +5,7 @@
 //! feature of this crate to be enabled.
 
 mod block_model;
+mod builder;
 mod mesher;
 mod prep_chunks;
 mod vertex_data;

@@ -166,15 +166,18 @@ impl ChunkAnchor {
     /// This function calculates what the priority value of loading the target
     /// would be based on the position of the target and the current status of
     /// this chunk anchor. If the target is outside of the load radius of
-    /// this chunk anchor, the returned value is infinity.
+    /// this chunk anchor, the returned value is negative infinity.
+    ///
+    /// Targets with a higher priority are more important than targets with a
+    /// lower priority value.
     pub fn get_priority(&self, pos: IVec3, target: IVec3) -> f32 {
         let distance = target.as_vec3().distance(pos.as_vec3());
         if distance > self.radius as f32 {
-            return f32::INFINITY;
+            return f32::NEG_INFINITY;
         }
 
         let view_dir = (target - pos).as_vec3().normalize();
         let weight = view_dir.dot(self.weighted_dir);
-        distance - weight
+        -distance + weight
     }
 }

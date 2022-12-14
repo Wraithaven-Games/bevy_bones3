@@ -31,6 +31,9 @@ where
 
     /// A standard query of voxel chunks.
     chunks: Query<'w, 's, Q, (With<VoxelChunk>, F)>,
+
+    /// A reference to Bevy commands for triggering specific chunk commands.
+    commands: Commands<'w, 's>,
 }
 
 impl<'w, 's, Q, F> VoxelQuery<'w, 's, Q, F>
@@ -117,6 +120,69 @@ where
         self.chunks
             .get_mut(self.find_chunk(world_id, chunk_coords)?)
             .map_err(VoxelQueryError::QueryError)
+    }
+
+    /// Triggers the target chunk to be remeshed.
+    #[cfg(feature = "meshing")]
+    pub fn remesh_chunk(
+        &mut self,
+        world_id: Entity,
+        chunk_coords: IVec3,
+    ) -> Result<(), VoxelQueryError> {
+        use crate::prelude::RemeshChunk;
+
+        let chunk_id = self.find_chunk(world_id, chunk_coords)?;
+        let mut c = self
+            .commands
+            .get_entity(chunk_id)
+            .ok_or(VoxelQueryError::ChunkNotFound(world_id, chunk_coords))?;
+
+        c.insert(RemeshChunk);
+        Ok(())
+    }
+
+    /// Triggers the target chunk and it's 6 surrounding neighboring chunks to
+    /// be remeshed. The function will silently ignore any chunks that do not
+    /// exist, except for the target chunk.
+    #[cfg(feature = "meshing")]
+    pub fn remesh_chunk_neighbors(
+        &mut self,
+        world_id: Entity,
+        chunk_coords: IVec3,
+    ) -> Result<(), VoxelQueryError> {
+        self.remesh_chunk(world_id, chunk_coords)?;
+
+        let _ = self.remesh_chunk(world_id, chunk_coords + IVec3::NEG_X);
+        let _ = self.remesh_chunk(world_id, chunk_coords + IVec3::X);
+        let _ = self.remesh_chunk(world_id, chunk_coords + IVec3::NEG_Y);
+        let _ = self.remesh_chunk(world_id, chunk_coords + IVec3::Y);
+        let _ = self.remesh_chunk(world_id, chunk_coords + IVec3::NEG_Z);
+        let _ = self.remesh_chunk(world_id, chunk_coords + IVec3::Z);
+
+        Ok(())
+    }
+
+    /// Triggers any chunks that are touching the specified block coordinates.
+    #[cfg(feature = "meshing")]
+    pub fn remesh_chunks_by_block(&mut self, world_id: Entity, block_coords: IVec3) {
+        use itertools::Itertools;
+
+        let chunks = vec![
+            block_coords + IVec3::NEG_X,
+            block_coords + IVec3::X,
+            block_coords + IVec3::NEG_Y,
+            block_coords + IVec3::Y,
+            block_coords + IVec3::NEG_Z,
+            block_coords + IVec3::Z,
+        ]
+        .iter()
+        .map(|c| *c >> 4)
+        .dedup()
+        .collect::<Vec<IVec3>>();
+
+        for chunk_coords in chunks.iter() {
+            let _ = self.remesh_chunk(world_id, *chunk_coords);
+        }
     }
 }
 

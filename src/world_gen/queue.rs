@@ -7,7 +7,7 @@ use futures_lite::future;
 use ordered_float::OrderedFloat;
 
 use super::{ChunkAnchor, WorldGeneratorHandler};
-use crate::prelude::{Region, RemeshChunk, VoxelCommands, VoxelQuery};
+use crate::prelude::{VoxelCommands, VoxelQuery};
 use crate::storage::{BlockData, VoxelChunk, VoxelStorage, VoxelWorld};
 
 /// This component indicates that the chunk is currently being loaded in an
@@ -49,14 +49,11 @@ pub fn load_chunks_async<T>(
 
         let anchor_pos = transform.translation.as_ivec3() >> 4;
         for chunk_coords in anchor.iter(anchor_pos) {
-            match chunks.get_chunk(world_id, chunk_coords) {
-                Ok(()) => continue,
-                Err(_) => {
-                    commands
-                        .voxel_world(world_id)
-                        .unwrap()
-                        .spawn_chunk(chunk_coords, PendingLoadChunkTask);
-                },
+            if chunks.get_chunk(world_id, chunk_coords).is_err() {
+                commands
+                    .voxel_world(world_id)
+                    .unwrap()
+                    .spawn_chunk(chunk_coords, PendingLoadChunkTask);
             };
         }
     }
@@ -82,71 +79,65 @@ pub fn push_chunk_async_queue<T>(
         return;
     }
 
-    let next_chunk = pending_tasks.iter().min_by_key(|q| {
-        let mut priority = f32::INFINITY;
+    let next_chunk = pending_tasks.iter().max_by_key(|q| {
+        let mut priority = f32::NEG_INFINITY;
 
         for (transform, anchor) in anchors.iter() {
             let pos = transform.translation.as_ivec3() >> 4;
             let anchor_priority = anchor.get_priority(pos, q.1.chunk_coords());
-            priority = f32::min(priority, anchor_priority);
+            priority = f32::max(priority, anchor_priority);
         }
 
         OrderedFloat(priority)
     });
 
-    if let Some((chunk_id, pending_task)) = next_chunk {
-        let world_id = pending_task.world_id();
-        let chunk_coords = pending_task.chunk_coords();
+    let Some((chunk_id, pending_task)) = next_chunk else {
+        return;
+    };
 
-        let generator = generators.get(world_id).ok().map(|g| g.generator());
-        match generator {
-            Some(gen) => {
-                let pool = AsyncComputeTaskPool::get();
-                let task = pool.spawn(async move { gen.generate_chunk(chunk_coords) });
-                commands
-                    .entity(chunk_id)
-                    .remove::<PendingLoadChunkTask>()
-                    .insert(LoadChunkTask(task));
-            },
+    let world_id = pending_task.world_id();
+    let chunk_coords = pending_task.chunk_coords();
 
-            None => {
-                commands
-                    .entity(chunk_id)
-                    .remove::<PendingLoadChunkTask>()
-                    .insert(VoxelStorage::<T>::default());
-            },
-        };
-    }
+    let generator = generators.get(world_id).ok().map(|g| g.generator());
+    match generator {
+        Some(gen) => {
+            let pool = AsyncComputeTaskPool::get();
+            let task = pool.spawn(async move { gen.generate_chunk(chunk_coords) });
+            commands
+                .entity(chunk_id)
+                .remove::<PendingLoadChunkTask>()
+                .insert(LoadChunkTask(task));
+        },
+
+        None => {
+            commands
+                .entity(chunk_id)
+                .remove::<PendingLoadChunkTask>()
+                .insert(VoxelStorage::<T>::default());
+        },
+    };
 }
 
 /// This system takes in all active async chunk loading tasks and, for each one
 /// that is finished, push the results to the target voxel chunk.
 pub fn finish_chunk_loading<T: BlockData>(
-    chunks: VoxelQuery<Entity, With<VoxelStorage<T>>>,
+    mut chunks: VoxelQuery<Entity, With<VoxelStorage<T>>>,
     mut load_chunk_tasks: Query<(Entity, &mut LoadChunkTask<T>, &VoxelChunk)>,
     mut commands: Commands,
 ) {
     for (chunk_id, mut task, chunk_meta) in load_chunk_tasks.iter_mut() {
-        if let Some(chunk_data) = future::block_on(future::poll_once(&mut task.0)) {
-            commands
-                .entity(chunk_id)
-                .remove::<LoadChunkTask<T>>()
-                .insert(chunk_data);
+        let Some(chunk_data) = future::block_on(future::poll_once(&mut task.0)) else {
+            continue;
+        };
 
-            #[cfg(feature = "meshing")]
-            {
-                let world_id = chunk_meta.world_id();
-                let chunk_coords = chunk_meta.chunk_coords();
-                for offset in Region::from_points(IVec3::NEG_ONE, IVec3::ONE).iter() {
-                    if offset.x + offset.y + offset.z > 1 {
-                        continue;
-                    }
+        commands
+            .entity(chunk_id)
+            .remove::<LoadChunkTask<T>>()
+            .insert(chunk_data);
 
-                    if let Ok(chunk_id) = chunks.get_chunk(world_id, chunk_coords + offset) {
-                        commands.entity(chunk_id).insert(RemeshChunk);
-                    }
-                }
-            }
-        }
+        #[cfg(feature = "meshing")]
+        chunks
+            .remesh_chunk_neighbors(chunk_meta.world_id(), chunk_meta.chunk_coords())
+            .unwrap();
     }
 }
