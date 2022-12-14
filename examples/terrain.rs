@@ -1,3 +1,4 @@
+use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::math::Vec3Swizzles;
 use bevy::prelude::*;
 use bevy_bones3::prelude::*;
@@ -56,19 +57,26 @@ fn main() {
     println!("Use WASD and Space/Shift to move.");
 
     App::new()
-        .insert_resource(MovementSettings {
-            sensitivity: 0.00015,
-            speed:       10.0,
-        })
+        // Bevy Standard Plugins
         .insert_resource(AmbientLight {
             color:      Color::WHITE,
             brightness: 2.5,
         })
         .add_plugins(DefaultPlugins)
+        // FPS Logging
+        .add_plugin(LogDiagnosticsPlugin::default())
+        .add_plugin(FrameTimeDiagnosticsPlugin::default())
+        // Bones3
         .add_plugin(Bones3Plugin)
         .add_plugin(Bones3BlockTypePlugin::<BlockState>::default())
         .add_plugin(Bones3MeshingPlugin::<BlockState>::default())
+        // Camera Movement
+        .insert_resource(MovementSettings {
+            sensitivity: 0.00015,
+            speed:       10.0,
+        })
         .add_plugin(NoCameraPlayerPlugin)
+        // Example Scene
         .add_startup_system(init)
         .run();
 }
@@ -100,36 +108,3 @@ fn init(mut commands: Commands) {
         ChunkAnchor::new(world, 10, 16),
     ));
 }
-
-// fn gen_chunk_meshes<T: BlockData + BlockShape>(
-//     worlds: Query<&VoxelWorld<T>>,
-//     mut commands: Commands,
-//     mut chunk_load_ev: EventReader<ChunkLoadEvent>,
-//     mut meshes: ResMut<Assets<Mesh>>,
-//     mut materials: ResMut<Assets<StandardMaterial>>,
-// ) {
-//     for event in chunk_load_ev.iter() {
-//         let world = worlds.get(event.world).unwrap();
-
-//         let pos = event.chunk_coords.as_vec3() * 16.0;
-//         let region = Region::CHUNK.shift(event.chunk_coords << 4);
-//         let Ok(mesh) = world.generate_mesh(region).into_mesh() else {
-//             continue;
-//         };
-
-//         let mut material: StandardMaterial = Color::rgb(0.0, 0.4,
-// 0.1).into();         material.perceptual_roughness = 0.95;
-//         material.reflectance = 0.0;
-
-//         let chunk = commands
-//             .spawn(PbrBundle {
-//                 mesh: meshes.add(mesh),
-//                 material: materials.add(material),
-//                 transform: Transform::from_translation(pos),
-//                 ..default()
-//             })
-//             .id();
-
-//         commands.entity(event.world).add_child(chunk);
-//     }
-// }
