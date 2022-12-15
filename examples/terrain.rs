@@ -67,9 +67,12 @@ fn main() {
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         // Bones3
-        .add_plugin(Bones3Plugin)
-        .add_plugin(Bones3BlockTypePlugin::<BlockState>::default())
-        .add_plugin(Bones3MeshingPlugin::<BlockState>::default())
+        .add_plugins(Bones3Plugin::new()
+            .add_mesh_support()
+            .add_world_gen_support()
+            .add_block_type::<BlockState>()
+            .add_mesh_block_type::<BlockState>()
+            .add_world_gen_block_type::<BlockState>())
         // Camera Movement
         .insert_resource(MovementSettings {
             sensitivity: 0.00015,

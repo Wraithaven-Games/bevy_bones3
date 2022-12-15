@@ -33,7 +33,7 @@ where
     chunks: Query<'w, 's, Q, (With<VoxelChunk>, F)>,
 
     /// A reference to Bevy commands for triggering specific chunk commands.
-    commands: Commands<'w, 's>,
+    _commands: Commands<'w, 's>,
 }
 
 impl<'w, 's, Q, F> VoxelQuery<'w, 's, Q, F>
@@ -133,7 +133,7 @@ where
 
         let chunk_id = self.find_chunk(world_id, chunk_coords)?;
         let mut c = self
-            .commands
+            ._commands
             .get_entity(chunk_id)
             .ok_or(VoxelQueryError::ChunkNotFound(world_id, chunk_coords))?;
 

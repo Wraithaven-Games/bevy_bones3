@@ -34,9 +34,11 @@ opt-level = 1
 opt-level = 3
 
 [features]
+default = ["meshing", "world_gen"]
 meshing = ["bevy/render", "bevy/bevy_asset"]
 trace = ["bevy/trace"]
+world_gen = []
 
 [[example]]
 name = "terrain"
-required-features = ["meshing"]
+required-features = ["meshing", "world_gen"]
