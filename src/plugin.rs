@@ -85,8 +85,6 @@ where
 {
     fn build(&self, app: &mut App) {
         app.register_type::<RemeshChunk>()
-            .register_type::<RemeshWorld>()
-            .add_system(remesh_dirty_chunks::<T>)
-            .add_system(setup_chunk_meshes);
+            .add_system(remesh_dirty_chunks::<T>);
     }
 }

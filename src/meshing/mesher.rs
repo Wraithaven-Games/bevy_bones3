@@ -15,15 +15,24 @@ pub struct RemeshChunk;
 
 /// This system remeshes dirty voxel chunks. For all chunks with the RemeshChunk
 /// component, each frame, the chunk with the highest priority value
-/// will be selected to
+/// will be selected for mesh generation.
+///
+/// This system will also create mesh and material handles on any chunk that do
+/// currently have them yet.
 pub fn remesh_dirty_chunks<T>(
     camera: Query<&Transform, With<Camera3d>>,
     shapes: VoxelQuery<&VoxelStorage<T>>,
     mut dirty_chunks: VoxelQuery<
-        (Entity, &VoxelChunk, &Handle<Mesh>, Option<&mut Visibility>),
+        (
+            Entity,
+            &VoxelChunk,
+            Option<(&Handle<Mesh>, &Handle<StandardMaterial>)>,
+            &mut Visibility,
+        ),
         With<RemeshChunk>,
     >,
     mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
     mut commands: Commands,
 ) where
     T: BlockData + BlockShape,
@@ -41,7 +50,7 @@ pub fn remesh_dirty_chunks<T>(
     #[cfg(feature = "trace")]
     profiler_guard.exit();
 
-    let Some((chunk_id, chunk_meta, mesh_handle, visibility)) = next_chunk else {
+    let Some((chunk_id, chunk_meta, handles, mut visibility)) = next_chunk else {
         return;
     };
 
@@ -68,15 +77,27 @@ pub fn remesh_dirty_chunks<T>(
     let profiler_guard = info_span!("remesh_chunk", target = "update_mesh").entered();
 
     let mesh = builder::build_chunk_mesh(get_block);
-    if let Some(mut v) = visibility {
-        v.is_visible = !mesh.is_empty();
-    }
+    visibility.is_visible = !mesh.is_empty();
 
-    let bevy_mesh = meshes.get_mut(mesh_handle).unwrap();
-    mesh.write_to_mesh(bevy_mesh).unwrap();
+    match handles {
+        Some((mesh_handle, _material_handle)) => {
+            let bevy_mesh = meshes.get_mut(mesh_handle).unwrap();
+            mesh.write_to_mesh(bevy_mesh).unwrap();
+
+            commands.entity(chunk_id).remove::<RemeshChunk>();
+        },
+
+        None => {
+            let mesh_handle = meshes.add(mesh.into_mesh());
+            let material_handle = materials.add(StandardMaterial::default());
+
+            commands
+                .entity(chunk_id)
+                .remove::<RemeshChunk>()
+                .insert((mesh_handle, material_handle));
+        },
+    };
 
     #[cfg(feature = "trace")]
     profiler_guard.exit();
-
-    commands.entity(chunk_id).remove::<RemeshChunk>();
 }

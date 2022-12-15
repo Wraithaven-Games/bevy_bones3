@@ -96,7 +96,6 @@ fn init(mut commands: Commands) {
     let world = commands
         .spawn_world::<BlockState, _>((
             SpatialBundle::default(),
-            RemeshWorld,
             WorldGeneratorHandler::from(Terrain),
         ))
         .id();

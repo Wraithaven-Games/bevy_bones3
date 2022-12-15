@@ -7,10 +7,8 @@
 mod block_model;
 mod builder;
 mod mesher;
-mod prep_chunks;
 mod vertex_data;
 
 pub use block_model::*;
 pub use mesher::*;
-pub use prep_chunks::*;
 pub use vertex_data::*;
