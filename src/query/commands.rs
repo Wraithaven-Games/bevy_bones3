@@ -1,134 +1,193 @@
-//! Useful extension traits to add voxel world/chunk spawning and despawning to
-//! Bevy commands.
+//! A system parameter helper for executing voxel-specific commands.
 
-use bevy::ecs::system::{Command, EntityCommands};
+use bevy::ecs::system::{EntityCommands, SystemParam};
 use bevy::prelude::*;
 
-use super::ChunkEntityPointers;
-use crate::storage::{BlockData, VoxelChunk, VoxelWorld};
+use super::sector::ChunkEntityPointers;
+use super::VoxelQueryError;
+use crate::prelude::{RemeshChunk, VoxelChunk, VoxelWorld};
 
-/// An extension trait for adding voxel world and voxel chunk support for Bevy
-/// commands.
-pub trait VoxelCommands<'w, 's> {
-    /// Gets the voxel world with the specified world id. (Entity)
-    ///
-    /// If there is no voxel world with the given world id then None is
-    /// returned.
-    fn voxel_world<'a>(&'a mut self, world_id: Entity) -> Option<VoxelWorldCommands<'w, 's, 'a>>;
+/// A Bevy command queue helper for working with Voxel-based actions.
+#[derive(SystemParam)]
+pub struct VoxelCommands<'w, 's> {
+    // TODO: Make this query readonly except when spawning/despawning chunks
+    /// A mutable query of chunk entity pointers.
+    chunk_pointers: Query<'w, 's, &'static mut ChunkEntityPointers, With<VoxelWorld>>,
 
-    /// Spawns a new voxel world.
-    fn spawn_world<'a, T, B>(&'a mut self, bundle: B) -> VoxelWorldCommands<'w, 's, 'a>
-    where
-        T: BlockData,
-        B: Bundle;
+    /// A list of all chunks within the Bevy entity list.
+    all_chunks: Query<'w, 's, Entity, With<VoxelChunk>>,
+
+    /// A reference to Bevy commands for triggering specific chunk commands.
+    commands: Commands<'w, 's>,
 }
 
-impl<'w, 's> VoxelCommands<'w, 's> for Commands<'w, 's> {
-    fn voxel_world<'a>(&'a mut self, world_id: Entity) -> Option<VoxelWorldCommands<'w, 's, 'a>> {
-        self.get_entity(world_id)?;
-
-        Some(VoxelWorldCommands {
-            world_id,
-            commands: self,
-        })
+impl<'w, 's, 'a> VoxelCommands<'w, 's> {
+    /// Gets whether or not the given world id is valid and queryable.
+    ///
+    /// This method will return false if the provided entity is not a valid
+    /// voxel world or if the entity has already despawned.
+    ///
+    /// Note that this function does not chunk if there are any chunks within
+    /// this voxel query or if the provided world  has any loaded chunks. This
+    /// function simply checks to see if the world in question exists or
+    /// not.
+    pub fn has_world(&self, world_id: Entity) -> bool {
+        self.chunk_pointers.contains(world_id)
     }
 
-    fn spawn_world<'a, T, B>(&'a mut self, bundle: B) -> VoxelWorldCommands<'w, 's, 'a>
-    where
-        T: BlockData,
-        B: Bundle,
-    {
-        let world_id = self
-            .spawn((VoxelWorld, ChunkEntityPointers::default()))
-            .insert(bundle)
-            .id();
+    /// Gets the entity id of the chunk at the given coordinates within the
+    /// indicated world.
+    ///
+    /// Returns an error if the world id is not valid or could not be found, or
+    /// if the world does not contain any chunks with the given chunk
+    /// coordinates.
+    pub fn find_chunk(
+        &'a mut self,
+        world_id: Entity,
+        chunk_coords: IVec3,
+    ) -> Result<EntityCommands<'w, 's, 'a>, VoxelQueryError> {
+        let chunk_id = self
+            .get_pointers(world_id)?
+            .get_chunk_entity(chunk_coords)
+            .and_then(|e| self.all_chunks.get(e).ok())
+            .ok_or(VoxelQueryError::ChunkNotFound(world_id, chunk_coords))?;
 
-        VoxelWorldCommands::<'w, 's, 'a> {
-            world_id,
-            commands: self,
+        Ok(self.commands.entity(chunk_id))
+    }
+
+    /// Gets a readonly reference to the chunk entity pointer handler for the
+    /// given voxel world.
+    ///
+    /// This method returns an error if the world could not be found.
+    fn get_pointers(&self, world_id: Entity) -> Result<&ChunkEntityPointers, VoxelQueryError> {
+        self.chunk_pointers
+            .get(world_id)
+            .map_err(|_| VoxelQueryError::WorldNotFound(world_id))
+    }
+
+    /// Gets a mutable reference to the chunk entity pointer handler for the
+    /// given voxel world.
+    ///
+    /// This method returns an error if the world could not be found.
+    fn get_pointers_mut(
+        &mut self,
+        world_id: Entity,
+    ) -> Result<Mut<'_, ChunkEntityPointers>, VoxelQueryError> {
+        self.chunk_pointers
+            .get_mut(world_id)
+            .map_err(|_| VoxelQueryError::WorldNotFound(world_id))
+    }
+
+    /// Triggers the target chunk to be remeshed.
+    #[cfg(feature = "meshing")]
+    pub fn remesh_chunk(
+        &mut self,
+        world_id: Entity,
+        chunk_coords: IVec3,
+    ) -> Result<(), VoxelQueryError> {
+        self.find_chunk(world_id, chunk_coords)?.insert(RemeshChunk);
+        Ok(())
+    }
+
+    /// Triggers the target chunk and it's 6 surrounding neighboring chunks to
+    /// be remeshed. The function will silently ignore any chunks that do not
+    /// exist, except for the target chunk.
+    #[cfg(feature = "meshing")]
+    pub fn remesh_chunk_neighbors(
+        &mut self,
+        world_id: Entity,
+        chunk_coords: IVec3,
+    ) -> Result<(), VoxelQueryError> {
+        self.remesh_chunk(world_id, chunk_coords)?;
+
+        let _ = self.remesh_chunk(world_id, chunk_coords + IVec3::NEG_X);
+        let _ = self.remesh_chunk(world_id, chunk_coords + IVec3::X);
+        let _ = self.remesh_chunk(world_id, chunk_coords + IVec3::NEG_Y);
+        let _ = self.remesh_chunk(world_id, chunk_coords + IVec3::Y);
+        let _ = self.remesh_chunk(world_id, chunk_coords + IVec3::NEG_Z);
+        let _ = self.remesh_chunk(world_id, chunk_coords + IVec3::Z);
+
+        Ok(())
+    }
+
+    /// Triggers any chunks that are touching the specified block coordinates.
+    #[cfg(feature = "meshing")]
+    pub fn remesh_chunks_by_block(&mut self, world_id: Entity, block_coords: IVec3) {
+        use itertools::Itertools;
+
+        let chunks = vec![
+            block_coords + IVec3::NEG_X,
+            block_coords + IVec3::X,
+            block_coords + IVec3::NEG_Y,
+            block_coords + IVec3::Y,
+            block_coords + IVec3::NEG_Z,
+            block_coords + IVec3::Z,
+        ]
+        .iter()
+        .map(|c| *c >> 4)
+        .dedup()
+        .collect::<Vec<IVec3>>();
+
+        for chunk_coords in chunks.iter() {
+            let _ = self.remesh_chunk(world_id, *chunk_coords);
         }
     }
-}
 
-/// A set of commands for handling voxel worlds.
-pub struct VoxelWorldCommands<'w, 's, 'a> {
-    /// The world id of the voxel world.
-    world_id: Entity,
-
-    /// The Bevy command queue.
-    commands: &'a mut Commands<'w, 's>,
-}
-
-impl<'w, 's, 'a> VoxelWorldCommands<'w, 's, 'a> {
-    /// Gets the id of the voxel world.
-    pub fn id(&self) -> Entity {
-        self.world_id
-    }
-
-    /// Gets the standard Bevy entity commands handler for this voxel world
-    /// entity.
-    pub fn entity_commands(&'a mut self) -> EntityCommands<'w, 's, 'a> {
-        self.commands.entity(self.world_id)
-    }
-
-    /// Despawns this world and all child chunks for it.
+    /// Spawns a new chunk within the indicated world at the specified chunk
+    /// coordinates. The chunk will be spawned with the provided component
+    /// bundle.
     ///
-    /// This is just a shortcut method for calling
-    /// `commands.entity_commands().despawn_recursive()`
-    pub fn despawn(&'a mut self) {
-        self.entity_commands().despawn_recursive()
-    }
-
-    /// Spawns a new chunk for the target voxel world at the given chunk
-    /// coordinates.
+    /// This method will return the id of the newly generated chunk, or return
+    /// an error if there is already a chunk at the given location within
+    /// the world.
     pub fn spawn_chunk<B>(
         &'a mut self,
+        world_id: Entity,
         chunk_coords: IVec3,
         bundle: B,
-    ) -> EntityCommands<'w, 's, 'a>
+    ) -> Result<Entity, VoxelQueryError>
     where
         B: Bundle,
     {
+        match self.find_chunk(world_id, chunk_coords) {
+            Ok(_) => return Err(VoxelQueryError::ChunkAlreadyExists(world_id, chunk_coords)),
+            Err(VoxelQueryError::ChunkNotFound(..)) => {},
+            Err(err) => return Err(err),
+        }
+
         let chunk_id = self
             .commands
-            .spawn(VoxelChunk::new(self.world_id, chunk_coords))
+            .spawn(VoxelChunk::new(world_id, chunk_coords))
             .insert(bundle)
-            .set_parent(self.world_id)
+            .set_parent(world_id)
             .id();
 
-        self.commands.add(UpdateChunkEntityPointerAction {
-            world_id: self.world_id,
-            chunk_id: Some(chunk_id),
-            chunk_coords,
-        });
-
-        self.commands.entity(chunk_id)
+        self.get_pointers_mut(world_id)
+            .unwrap()
+            .set_chunk_entity(chunk_coords, Some(chunk_id));
+        Ok(chunk_id)
     }
-}
 
-/// A Bevy command action that updates the chunk pointer cache for a voxel world
-/// to indicate a new entity pointer for a given set of chunk coordinates.
-struct UpdateChunkEntityPointerAction {
-    /// The id of the world being manipulated.
-    world_id: Entity,
+    /// Despawns, recursively, the chunk at the indicated chunk coordinates for
+    /// the indicated voxel world.
+    ///
+    /// This function returns an error if the world could not be found or if the
+    /// chunk does not exist.
+    pub fn despawn_chunk(
+        &'a mut self,
+        world_id: Entity,
+        chunk_coords: IVec3,
+    ) -> Result<(), VoxelQueryError> {
+        self.find_chunk(world_id, chunk_coords)?.despawn_recursive();
+        self.get_pointers_mut(world_id)
+            .unwrap()
+            .set_chunk_entity(chunk_coords, None);
 
-    /// The new chunk id to store in the cache.
-    chunk_id: Option<Entity>,
+        Ok(())
+    }
 
-    /// The coordinates of the chunk to modify.
-    chunk_coords: IVec3,
-}
-
-impl Command for UpdateChunkEntityPointerAction {
-    fn write(self, world: &mut World) {
-        let mut chunk_pointers = world.get_mut::<ChunkEntityPointers>(self.world_id).unwrap();
-        if chunk_pointers.get_chunk_entity(self.chunk_coords).is_none() {
-            chunk_pointers.set_chunk_entity(self.chunk_coords, self.chunk_id);
-        } else {
-            panic!(
-                "Attempted to create a chunk on top of an existing one at {}",
-                self.chunk_coords
-            );
-        }
+    /// Gets a reference to the underlying Bevy commands queue.
+    pub fn commands(&'a mut self) -> &'a mut Commands<'w, 's> {
+        &mut self.commands
     }
 }

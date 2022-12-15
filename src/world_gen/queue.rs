@@ -7,7 +7,7 @@ use futures_lite::future;
 use ordered_float::OrderedFloat;
 
 use super::{ChunkAnchor, WorldGeneratorHandler};
-use crate::prelude::{VoxelCommands, VoxelQuery};
+use crate::prelude::VoxelCommands;
 use crate::storage::{BlockData, VoxelChunk, VoxelStorage, VoxelWorld};
 
 /// This component indicates that the chunk is currently being loaded in an
@@ -26,9 +26,8 @@ pub struct PendingLoadChunkTask;
 /// This function will trigger all of the chunks that are requested by chunk
 /// anchors to begin loading.
 pub fn load_chunks_async<T>(
-    chunks: VoxelQuery<()>,
     mut anchors: Query<(Entity, &Transform, &mut ChunkAnchor)>,
-    mut commands: Commands,
+    mut commands: VoxelCommands,
 ) where
     T: BlockData,
 {
@@ -37,7 +36,7 @@ pub fn load_chunks_async<T>(
             continue;
         };
 
-        if !chunks.has_world(world_id) {
+        if !commands.has_world(world_id) {
             warn!(
                 ?world_id,
                 ?anchor_id,
@@ -52,11 +51,10 @@ pub fn load_chunks_async<T>(
 
         let anchor_pos = transform.translation.as_ivec3() >> 4;
         for chunk_coords in anchor.iter(anchor_pos) {
-            if chunks.get_chunk(world_id, chunk_coords).is_err() {
+            if commands.find_chunk(world_id, chunk_coords).is_err() {
                 commands
-                    .voxel_world(world_id)
-                    .unwrap()
-                    .spawn_chunk(chunk_coords, PendingLoadChunkTask);
+                    .spawn_chunk(world_id, chunk_coords, PendingLoadChunkTask)
+                    .unwrap();
             };
         }
 
@@ -131,25 +129,25 @@ pub fn push_chunk_async_queue<T>(
 /// This system takes in all active async chunk loading tasks and, for each one
 /// that is finished, push the results to the target voxel chunk.
 pub fn finish_chunk_loading<T: BlockData>(
-    mut chunks: VoxelQuery<Entity, With<VoxelStorage<T>>>,
-    mut load_chunk_tasks: Query<(Entity, &mut LoadChunkTask<T>, &VoxelChunk)>,
-    mut commands: Commands,
+    mut load_chunk_tasks: Query<(&mut LoadChunkTask<T>, &VoxelChunk)>,
+    mut commands: VoxelCommands,
 ) {
     #[cfg(feature = "trace")]
     let profiler_guard = info_span!("world_gen", target = "finalize_chunks").entered();
 
-    for (chunk_id, mut task, chunk_meta) in load_chunk_tasks.iter_mut() {
+    for (mut task, chunk_meta) in load_chunk_tasks.iter_mut() {
         let Some(chunk_data) = future::block_on(future::poll_once(&mut task.0)) else {
             continue;
         };
 
         commands
-            .entity(chunk_id)
+            .find_chunk(chunk_meta.world_id(), chunk_meta.chunk_coords())
+            .unwrap()
             .remove::<LoadChunkTask<T>>()
             .insert(chunk_data);
 
         #[cfg(feature = "meshing")]
-        chunks
+        commands
             .remesh_chunk_neighbors(chunk_meta.world_id(), chunk_meta.chunk_coords())
             .unwrap();
     }

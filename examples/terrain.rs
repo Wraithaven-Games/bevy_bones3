@@ -1,9 +1,27 @@
-use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::math::Vec3Swizzles;
 use bevy::prelude::*;
 use bevy_bones3::prelude::*;
 use bevy_flycam::{FlyCam, MovementSettings, NoCameraPlayerPlugin};
 use noise::{NoiseFn, Perlin};
+
+fn main() {
+    println!("Press Esc to toggle cursor grabbing.");
+    println!("Use WASD and Space/Shift to move.");
+
+    App::new()
+        .add_plugins(DefaultPlugins)
+        .add_plugins(
+            Bones3Plugin::new()
+                .add_mesh_support()
+                .add_world_gen_support()
+                .add_block_type::<BlockState>()
+                .add_mesh_block_type::<BlockState>()
+                .add_world_gen_block_type::<BlockState>(),
+        )
+        .add_plugin(NoCameraPlayerPlugin)
+        .add_startup_system(init)
+        .run();
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 enum BlockState {
@@ -52,38 +70,6 @@ impl WorldGenerator<BlockState> for Terrain {
     }
 }
 
-fn main() {
-    println!("Press Esc to toggle cursor grabbing.");
-    println!("Use WASD and Space/Shift to move.");
-
-    App::new()
-        // Bevy Standard Plugins
-        .insert_resource(AmbientLight {
-            color:      Color::WHITE,
-            brightness: 2.5,
-        })
-        .add_plugins(DefaultPlugins)
-        // FPS Logging
-        .add_plugin(LogDiagnosticsPlugin::default())
-        .add_plugin(FrameTimeDiagnosticsPlugin::default())
-        // Bones3
-        .add_plugins(Bones3Plugin::new()
-            .add_mesh_support()
-            .add_world_gen_support()
-            .add_block_type::<BlockState>()
-            .add_mesh_block_type::<BlockState>()
-            .add_world_gen_block_type::<BlockState>())
-        // Camera Movement
-        .insert_resource(MovementSettings {
-            sensitivity: 0.00015,
-            speed:       10.0,
-        })
-        .add_plugin(NoCameraPlayerPlugin)
-        // Example Scene
-        .add_startup_system(init)
-        .run();
-}
-
 fn init(mut commands: Commands) {
     // light
     commands.spawn(DirectionalLightBundle {
@@ -94,10 +80,15 @@ fn init(mut commands: Commands) {
         },
         ..default()
     });
+    commands.insert_resource(AmbientLight {
+        color:      Color::WHITE,
+        brightness: 2.5,
+    });
 
     // voxel world
     let world = commands
-        .spawn_world::<BlockState, _>((
+        .spawn((
+            VoxelWorldBundle::default(),
             SpatialBundle::default(),
             WorldGeneratorHandler::from(Terrain),
         ))
@@ -109,4 +100,8 @@ fn init(mut commands: Commands) {
         FlyCam,
         ChunkAnchor::new(world, 10, 16),
     ));
+    commands.insert_resource(MovementSettings {
+        sensitivity: 0.00015,
+        speed:       10.0,
+    });
 }

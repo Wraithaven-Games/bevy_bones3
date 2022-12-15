@@ -4,6 +4,8 @@
 //! This module also handles the automatic loading and unloading of chunks
 //! within a voxel world based off a given chunk anchor's position and effect
 //! radius.
+//!
+//! This module requires the `world_gen` feature to use.
 
 mod anchor;
 mod generator;
