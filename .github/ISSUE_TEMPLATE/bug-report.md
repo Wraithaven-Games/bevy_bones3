@@ -28,5 +28,8 @@ If applicable, add screenshots to help explain your problem.
  - Bones Cubed
  - (additional libraries as needed)
 
+**Code snippets**
+Please provide some example code that can reproduce this issue, if possible.
+
 **Additional context**
 Add any other context about the problem here.
