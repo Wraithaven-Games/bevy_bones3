@@ -13,6 +13,16 @@ pub enum VoxelQueryError {
     /// within a specific world.
     ChunkNotFound(Entity, IVec3),
 
+    /// This error is thrown when a chunk entity most likely exists, but is not
+    /// currently available. This can happen when attempting to read a chunk
+    /// that has been spawned, but won't actually be created until the next
+    /// frame.
+    ///
+    /// This can also be triggered when manually despawning chunks and
+    /// corrupting the chunk entity pointer cache, leading pointers to dead
+    /// chunks to exist.
+    ChunkNotAvailable(Entity, IVec3),
+
     /// Thrown when attempting to spawn a new chunk that already exists.
     ChunkAlreadyExists(Entity, IVec3),
 

@@ -45,12 +45,21 @@ impl<'w, 's, 'a> VoxelCommands<'w, 's> {
         &'a mut self,
         world_id: Entity,
         chunk_coords: IVec3,
+        ignore_unavailable: bool,
     ) -> Result<EntityCommands<'w, 's, 'a>, VoxelQueryError> {
-        let chunk_id = self
-            .get_pointers(world_id)?
-            .get_chunk_entity(chunk_coords)
-            .and_then(|e| self.all_chunks.get(e).ok())
-            .ok_or(VoxelQueryError::ChunkNotFound(world_id, chunk_coords))?;
+        let chunk_id = match self.get_pointers(world_id)?.get_chunk_entity(chunk_coords) {
+            Some(chunk_id) => {
+                if !ignore_unavailable {
+                    self.all_chunks
+                        .get(chunk_id)
+                        .map_err(|_| VoxelQueryError::ChunkNotAvailable(world_id, chunk_coords))?;
+                }
+                chunk_id
+            },
+            None => {
+                return Err(VoxelQueryError::ChunkNotFound(world_id, chunk_coords));
+            },
+        };
 
         Ok(self.commands.entity(chunk_id))
     }
@@ -85,7 +94,8 @@ impl<'w, 's, 'a> VoxelCommands<'w, 's> {
         world_id: Entity,
         chunk_coords: IVec3,
     ) -> Result<(), VoxelQueryError> {
-        self.find_chunk(world_id, chunk_coords)?.insert(RemeshChunk);
+        self.find_chunk(world_id, chunk_coords, true)?
+            .insert(RemeshChunk);
         Ok(())
     }
 
@@ -149,7 +159,7 @@ impl<'w, 's, 'a> VoxelCommands<'w, 's> {
     where
         B: Bundle,
     {
-        match self.find_chunk(world_id, chunk_coords) {
+        match self.find_chunk(world_id, chunk_coords, true) {
             Ok(_) => return Err(VoxelQueryError::ChunkAlreadyExists(world_id, chunk_coords)),
             Err(VoxelQueryError::ChunkNotFound(..)) => {},
             Err(err) => return Err(err),
@@ -165,6 +175,7 @@ impl<'w, 's, 'a> VoxelCommands<'w, 's> {
         self.get_pointers_mut(world_id)
             .unwrap()
             .set_chunk_entity(chunk_coords, Some(chunk_id));
+
         Ok(chunk_id)
     }
 
@@ -178,7 +189,9 @@ impl<'w, 's, 'a> VoxelCommands<'w, 's> {
         world_id: Entity,
         chunk_coords: IVec3,
     ) -> Result<(), VoxelQueryError> {
-        self.find_chunk(world_id, chunk_coords)?.despawn_recursive();
+        self.find_chunk(world_id, chunk_coords, true)?
+            .despawn_recursive();
+
         self.get_pointers_mut(world_id)
             .unwrap()
             .set_chunk_entity(chunk_coords, None);
