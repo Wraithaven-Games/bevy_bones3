@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    
+
     - name: Deploy
       uses: katyo/publish-crates@v1
       with:
@@ -22,18 +22,13 @@ jobs:
     needs: deploy
     steps:
     - uses: actions/checkout@v3
-    
+
     - name: Install cargo-release
       run: cargo install cargo-release
-    
+
     - name: Bump versions
-      run: |
-        current_version=$(cargo metadata --format-version 1 --no-deps | jq --raw-output '.packages | .[] | select(.name == "bevy_bones3").version')
-        minor_version=$(sed 's/^0\.\([0-9]\+\).*/\1/' <<< "${current_version}")
-        next_version=0.$((minor_version + 1)).0
-        echo "Bumping version to ${next_version}"
-        cargo release ${next_version} --workspace --no-publish --execute --no-tag --no-push --dependent-version upgrade --no-confirm
-    
+      run: cargo release minor --workspace --no-publish --execute --no-push --dependent-version upgrade --no-confirm
+
     - name: Create pull request
       uses: peter-evans/create-pull-request@v4
       with:
