@@ -1,0 +1,22 @@
+[package]
+name = "bones3_core"
+version = "0.1.0"
+authors = ["TheDudeFromCI <thedudefromci@gmail.com>"]
+edition = "2021"
+description = "The core functionality for the Bones Cubed plugin for Bevy."
+readme = "README.md"
+homepage = "https://github.com/TheDudeFromCI/bevy_bones3"
+repository = "https://github.com/TheDudeFromCI/bevy_bones3"
+license = "Apache-2.0"
+keywords = ["bones3"]
+
+[features]
+default = []
+
+[dependencies]
+bevy = { version = "0.9.1", default-features = false, features = [] }
+thiserror = "1.0.38"
+
+[dev-dependencies]
+bevy_test_utils = { git = "https://github.com/TheDudeFromCI/bevy_test_utils.git", branch = "master" }
+pretty_assertions = "1.3.0"

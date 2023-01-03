@@ -7,8 +7,8 @@ use super::{builder, BlockShape};
 use crate::prelude::{Region, VoxelQuery};
 use crate::storage::{BlockData, VoxelChunk, VoxelStorage};
 
-/// A temporary component that indicates that the target chunk needs to be
-/// remeshed.
+/// A temporary marker component that indicates that the target chunk needs to
+/// be remeshed.
 #[derive(Debug, Component, Reflect)]
 #[component(storage = "SparseSet")]
 pub struct RemeshChunk;

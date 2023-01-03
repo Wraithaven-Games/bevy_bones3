@@ -5,6 +5,7 @@
 //! manipulated.
 
 mod chunk;
+pub(crate) mod chunk_pointers;
 mod data;
 
 pub use chunk::*;

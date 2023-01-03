@@ -65,6 +65,9 @@ pub fn force_load_chunks<T>(
                     commands
                         .remesh_chunk_neighbors(world_id, chunk_coords)
                         .unwrap();
+
+                    #[cfg(feature = "physics")]
+                    commands.rebuild_collision(world_id, chunk_coords).unwrap();
                 },
                 Err(err) => panic!("Unexpected state: {:?}", err),
             }
@@ -218,6 +221,11 @@ pub fn finish_chunk_loading<T: BlockData>(
         #[cfg(feature = "meshing")]
         commands
             .remesh_chunk_neighbors(chunk_meta.world_id(), chunk_meta.chunk_coords())
+            .unwrap();
+
+        #[cfg(feature = "physics")]
+        commands
+            .rebuild_collision(chunk_meta.world_id(), chunk_meta.chunk_coords())
             .unwrap();
     }
 }

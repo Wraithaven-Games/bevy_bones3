@@ -8,24 +8,11 @@
 #![warn(rustdoc::invalid_html_tags)]
 #![allow(clippy::type_complexity)]
 
-pub mod math;
-#[cfg(feature = "meshing")]
-pub mod meshing;
-pub mod plugin;
-pub mod query;
-pub mod storage;
-#[cfg(feature = "world_gen")]
-pub mod world_gen;
+pub mod plugins;
+pub use bones3_core as core;
 
-/// Contains a re-export of all components and systems defined within this
-/// crate.
+/// Used to import common components and systems for Bones Cubed.
 pub mod prelude {
-    pub use super::math::*;
-    #[cfg(feature = "meshing")]
-    pub use super::meshing::*;
-    pub use super::plugin::*;
-    pub use super::query::*;
-    pub use super::storage::*;
-    #[cfg(feature = "world_gen")]
-    pub use super::world_gen::*;
+    pub use super::core::*;
+    pub use super::plugins::*;
 }

@@ -3,7 +3,7 @@
 
 use bevy::prelude::*;
 
-use crate::prelude::Region;
+use crate::math::Region;
 
 /// The depth value of the cache, to determine the memory size of one block.
 const CACHE_DEPTH: u8 = 5;
@@ -80,7 +80,7 @@ impl ChunkEntityPointers {
     ///
     /// If there is no known chunk at the given coordinates, then None is
     /// returned.
-    pub(super) fn get_chunk_entity(&self, chunk_coords: IVec3) -> Option<Entity> {
+    pub fn get_chunk_entity(&self, chunk_coords: IVec3) -> Option<Entity> {
         let sector_coords = chunk_coords >> CACHE_DEPTH;
         self.sectors
             .iter()
@@ -89,7 +89,7 @@ impl ChunkEntityPointers {
     }
 
     /// Sets the entity id of the chunk at the given coordinates.
-    pub(super) fn set_chunk_entity(&mut self, chunk_coords: IVec3, entity: Option<Entity>) {
+    pub fn set_chunk_entity(&mut self, chunk_coords: IVec3, entity: Option<Entity>) {
         let sector_coords = chunk_coords >> CACHE_DEPTH;
         let sector = match self
             .sectors

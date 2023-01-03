@@ -42,7 +42,7 @@ jobs:
 
     - name: Run Unit Tests
       run: |
-        cargo test --all-targets --all-features
+        cargo test --all-targets --all-features --workspace
 
 
   format:
@@ -109,7 +109,7 @@ jobs:
         cargo -V
 
     - name: Verify Clippy
-      run: cargo +nightly clippy --all-targets --all-features -- -D warnings
+      run: cargo +nightly clippy --all-targets --all-features --workspace -- -D warnings
 
 
   docs:

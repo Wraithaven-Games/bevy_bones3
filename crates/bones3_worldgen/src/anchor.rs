@@ -169,7 +169,7 @@ impl ChunkAnchor {
     /// function returns None and does not require any chunks to be force
     /// loaded.
     pub fn iter_force(&self, center: IVec3) -> Option<impl Iterator<Item = IVec3> + '_> {
-        let radius = self.force_radius as i32;
+        let radius = self.force_radius;
         if radius >= 0 {
             Some(Region::from_points(center - radius, center + radius).into_iter())
         } else {

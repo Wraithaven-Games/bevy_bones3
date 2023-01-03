@@ -2,8 +2,8 @@
 
 use std::fmt::Display;
 
-use anyhow::{bail, Result};
 use bevy::prelude::*;
+use thiserror::Error;
 
 use super::iterators::CuboidIterator;
 
@@ -49,9 +49,9 @@ impl Region {
     /// The position is the lowest point along the X, Y, and Z axis'.
     ///
     /// This function panics if the size is <= 0 along any axis.
-    pub fn from_size(pos: IVec3, size: IVec3) -> Result<Self> {
+    pub fn from_size(pos: IVec3, size: IVec3) -> Result<Self, RegionError> {
         if size.x <= 0 || size.y <= 0 || size.z <= 0 {
-            bail!("Cannot a region with a size <= 0. Found: {size}");
+            return Err(RegionError::NegativeSize(size));
         }
 
         Ok(Self {
@@ -63,13 +63,13 @@ impl Region {
     /// Creates a new region based on the intersection between provided regions.
     ///
     /// If the two given regions do not intersect, an error is returned.
-    pub fn intersection(a: &Region, b: &Region) -> Result<Self> {
+    pub fn intersection(a: &Region, b: &Region) -> Result<Self, RegionError> {
         let min = a.min().max(b.min());
         let max = a.max().min(b.max());
         let size = max - min + 1;
 
         if size.x <= 0 || size.y <= 0 || size.z <= 0 {
-            bail!("Regions {a} and {b} do not intersect");
+            return Err(RegionError::NoIntersection(*a, *b));
         }
 
         Ok(Self {
@@ -108,9 +108,9 @@ impl Region {
     /// Contains a position within this region into a unique array index.
     ///
     /// If the given point is not within this region, an error is returned.
-    pub fn point_to_index(&self, point: IVec3) -> Result<usize> {
+    pub fn point_to_index(&self, point: IVec3) -> Result<usize, RegionError> {
         if !self.contains(point) {
-            bail!("Point is outside of region: {point}, Region: {self}");
+            return Err(RegionError::OutOfBounds(point));
         }
 
         let p = point - self.pos;
@@ -171,6 +171,25 @@ impl Display for Region {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "(Pos: {}, Size: {})", self.pos, self.size)
     }
+}
+
+/// An set of error types that can be returned by a Region.
+#[derive(Error, Debug)]
+pub enum RegionError {
+    /// An error that is thrown when attempting to create a region with a
+    /// negative size.
+    #[error("Cannot create a region with a size <= 0. Found: {0}")]
+    NegativeSize(IVec3),
+
+    /// An error that is thrown when attempting to create a region based on the
+    /// intersection of two regions that do not interest at all.
+    #[error("Regions {0} and {1} do not intersect")]
+    NoIntersection(Region, Region),
+
+    /// An error that is thrown when attempting to get the index of a point that
+    /// lies outside of the region bounds.
+    #[error("Point is outside of region: {0}")]
+    OutOfBounds(IVec3),
 }
 
 #[cfg(test)]

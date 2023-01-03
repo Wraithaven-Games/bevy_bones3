@@ -1,7 +1,7 @@
 //! Defines how a block model should be added to a chunk mesh.
 
 use anyhow::{bail, Result};
-use bevy::prelude::{IVec3, Mesh, Vec2, Vec3};
+use bevy::prelude::*;
 use bevy::render::mesh::Indices;
 use bevy::render::render_resource::PrimitiveTopology;
 use bitflags::bitflags;
