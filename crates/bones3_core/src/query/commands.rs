@@ -278,7 +278,7 @@ impl Command for UpdateChunkPointersAction {
 
 #[cfg(test)]
 mod test {
-    use bevy_test_utils::TestApp;
+    use bones3_test_utils::TestApp;
 
     use super::*;
 

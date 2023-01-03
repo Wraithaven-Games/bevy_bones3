@@ -626,14 +626,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bevy_test_utils"
-version = "0.1.0"
-source = "git+https://github.com/TheDudeFromCI/bevy_test_utils.git?branch=master#6386b3e3364d15aaec102afd2dd2a8ae19ecd6fe"
-dependencies = [
- "bevy",
-]
-
-[[package]]
 name = "bevy_text"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -772,9 +764,16 @@ name = "bones3_core"
 version = "0.1.0"
 dependencies = [
  "bevy",
- "bevy_test_utils",
+ "bones3_test_utils",
  "pretty_assertions",
  "thiserror",
+]
+
+[[package]]
+name = "bones3_test_utils"
+version = "0.1.0"
+dependencies = [
+ "bevy",
 ]
 
 [[package]]

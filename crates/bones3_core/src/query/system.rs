@@ -201,7 +201,7 @@ where
 
 #[cfg(test)]
 mod test {
-    use bevy_test_utils::TestApp;
+    use bones3_test_utils::TestApp;
     use pretty_assertions::assert_eq;
 
     use super::*;
