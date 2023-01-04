@@ -136,6 +136,12 @@ where
         self.voxel_query.query.get(chunk_id).ok().map(|(_, q)| q)
     }
 
+    /// Gets the chunk at the given block coordinates within this world, if it
+    /// is both loaded and matches the indicated system query. Otherwise,
+    pub fn get_chunk_at_block(&'a mut self, block_coords: IVec3) -> Option<ROQueryItem<'_, Q>> {
+        self.get_chunk(block_coords >> 4)
+    }
+
     /// Gets the id of the voxel world being handled.
     pub fn world_id(&self) -> Entity {
         self.world_id
@@ -191,6 +197,13 @@ where
             .get_mut(chunk_id)
             .ok()
             .map(|(_, q)| q)
+    }
+
+    /// Gets the chunk at the given block coordinates within this world,
+    /// mutably, if it is both loaded and matches the indicated system query.
+    /// Otherwise, this method returns None.
+    pub fn get_chunk_at_block_mut(&'a mut self, block_coords: IVec3) -> Option<QueryItem<'_, Q>> {
+        self.get_chunk_mut(block_coords >> 4)
     }
 
     /// Gets the id of the voxel world being handled.

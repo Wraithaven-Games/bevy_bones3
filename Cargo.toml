@@ -1,6 +1,6 @@
 [package]
 name = "bevy_bones3"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["TheDudeFromCI <thedudefromci@gmail.com>"]
 edition = "2021"
 description = "A voxel world storage and mesh generation plugin for Bevy."
@@ -14,7 +14,10 @@ exclude = [".github/", "crates/"]
 
 [dependencies]
 bevy = { version = "0.9.1", default-features = false, features = [] }
-bones3_core = { path = "crates/bones3_core", version = "0.1.0" }
+bones3_core = { path = "crates/bones3_core", version = "0.2.0" }
+
+[dev-dependencies]
+rand = "0.8.5"
 
 [profile.dev]
 opt-level = 1
@@ -35,3 +38,6 @@ members = [
   "crates/bones3_core",
   "crates/bones3_test_utils"
 ]
+
+[[example]]
+name = "data_storage"

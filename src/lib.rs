@@ -13,6 +13,6 @@ pub use bones3_core as core;
 
 /// Used to import common components and systems for Bones Cubed.
 pub mod prelude {
-    pub use super::core::*;
+    pub use super::core::prelude::*;
     pub use super::plugins::*;
 }

@@ -11,6 +11,8 @@ impl<T> BlockData for T where T: Default + Copy + Send + Sync + 'static {}
 
 /// A storage component for containing a 16x16x16 grid of block data. This is
 /// usually intended to be used on a voxel chunk component.
+///
+/// By default it is filled with the default value for `T`.
 #[derive(Debug, Component, Reflect)]
 pub struct VoxelStorage<T>
 where
