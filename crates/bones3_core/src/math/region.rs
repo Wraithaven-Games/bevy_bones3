@@ -23,6 +23,11 @@ impl Region {
         pos:  IVec3::ZERO,
         size: IVec3::new(16, 16, 16),
     };
+    /// A 3x3x3 region centered at (0, 0, 0).
+    pub const NEIGHBORS: Region = Region {
+        pos:  IVec3::NEG_ONE,
+        size: IVec3::new(3, 3, 3),
+    };
     /// A region that contains a sector of chunks, located at the position (0,
     /// 0, 0).
     pub const SECTOR: Region = Region {

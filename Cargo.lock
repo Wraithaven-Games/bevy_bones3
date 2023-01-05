@@ -771,6 +771,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "bones3_remesh"
+version = "0.2.0"
+dependencies = [
+ "bevy",
+ "bitflags",
+ "bones3_core",
+ "bones3_test_utils",
+ "ordered-float",
+ "pretty_assertions",
+ "thiserror",
+]
+
+[[package]]
 name = "bones3_test_utils"
 version = "0.2.0"
 dependencies = [
@@ -1648,6 +1661,15 @@ name = "once_cell"
 version = "1.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6f61fba1741ea2b3d6a1e3178721804bb716a68a6aeba1149b5d52e3d464ea66"
+
+[[package]]
+name = "ordered-float"
+version = "3.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d84eb1409416d254e4a9c8fa56cc24701755025b458f0fcd8e59e1f5f40c23bf"
+dependencies = [
+ "num-traits",
+]
 
 [[package]]
 name = "output_vt100"

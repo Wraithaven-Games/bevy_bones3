@@ -36,7 +36,8 @@ physics = []
 # members = ["crates/*"]
 members = [
   "crates/bones3_core",
-  "crates/bones3_test_utils"
+  "crates/bones3_test_utils",
+  "crates/bones3_remesh"
 ]
 
 [[example]]

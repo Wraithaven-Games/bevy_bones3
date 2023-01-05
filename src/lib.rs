@@ -6,7 +6,6 @@
 #![warn(clippy::missing_docs_in_private_items)]
 #![warn(rustdoc::invalid_codeblock_attributes)]
 #![warn(rustdoc::invalid_html_tags)]
-#![allow(clippy::type_complexity)]
 
 pub mod plugins;
 pub use bones3_core as core;

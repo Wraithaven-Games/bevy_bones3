@@ -3,7 +3,8 @@
 
 use bevy::prelude::{IVec3, Vec2, Vec3};
 
-use crate::meshing::block_model::{BlockModelGenerator, BlockOcclusion, TempMesh};
+use crate::mesh::block_model::{BlockModelGenerator, BlockOcclusion};
+use crate::vertex_data::TempMesh;
 
 /// Contains the vertex data for generating a cube.
 ///
@@ -155,8 +156,11 @@ impl BlockModelGenerator for CubeModelBuilder {
     fn set_block_pos(&mut self, pos: IVec3) {
         self.block_pos = pos;
     }
+}
 
-    fn set_occlusion(&mut self, occlusion: BlockOcclusion) {
+impl CubeModelBuilder {
+    /// Sets the faces of the cube that will be occluded.
+    pub fn set_occlusion(&mut self, occlusion: BlockOcclusion) {
         self.occlusion = occlusion;
     }
 }
