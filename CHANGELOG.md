@@ -10,5 +10,8 @@
 - Prelude now contains correct bones3_core module path
 - Voxel query errors now have more descriptive error messages
 
+### Removed
+- Bones Cubed plugins must now be individually added, instead of using a plugin group
+
 ## v0.1.0
 Initial release
