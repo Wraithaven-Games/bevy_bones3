@@ -2,6 +2,7 @@
 
 ## v0.2.0
 ### Added
+- Added chunk mesh generation support
 - VoxelQueries can now grab chunks based off of block positions
 - Created data_storage example
 

@@ -15,6 +15,7 @@ exclude = [".github/", "crates/"]
 [dependencies]
 bevy = { version = "0.9.1", default-features = false, features = [] }
 bones3_core = { path = "crates/bones3_core", version = "0.2.0" }
+bones3_remesh = { path = "crates/bones3_remesh", version = "0.2.0", optional = true }
 
 [dev-dependencies]
 rand = "0.8.5"
@@ -26,11 +27,8 @@ opt-level = 1
 opt-level = 3
 
 [features]
-default = ["meshing", "world_gen", "physics"]
-meshing = ["bevy/render", "bevy/bevy_asset"]
-trace = ["bevy/trace"]
-world_gen = []
-physics = []
+default = ["meshing"]
+meshing = ["bones3_remesh"]
 
 [workspace]
 # members = ["crates/*"]
