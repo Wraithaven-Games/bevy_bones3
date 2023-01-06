@@ -7,7 +7,6 @@
 #![warn(rustdoc::invalid_codeblock_attributes)]
 #![warn(rustdoc::invalid_html_tags)]
 
-pub mod plugins;
 pub use bones3_core as core;
 #[cfg(feature = "meshing")]
 pub use bones3_remesh as remesh;
@@ -15,7 +14,6 @@ pub use bones3_remesh as remesh;
 /// Used to import common components and systems for Bones Cubed.
 pub mod prelude {
     pub use super::core::prelude::*;
-    pub use super::plugins::*;
     #[cfg(feature = "meshing")]
     pub use super::remesh::prelude::*;
 }

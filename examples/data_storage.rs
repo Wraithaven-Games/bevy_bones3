@@ -6,9 +6,7 @@ use bevy_bones3::prelude::*;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        // Bones Cubed provides a default plugin group that can be added similar
-        // to Bevy's DefaultPlugins. THe block data type simply needs to be provided.
-        .add_plugins(Bones3Plugins::<BlockState>::default())
+        .add_plugin(Bones3CorePlugin::<BlockState>::default())
         .add_startup_system(init)
         .add_system(update)
         .run();
