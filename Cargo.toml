@@ -28,7 +28,7 @@ opt-level = 3
 
 [features]
 default = ["meshing"]
-meshing = ["bones3_remesh"]
+meshing = ["bones3_remesh", "bevy/bevy_asset", "bevy/render", "bevy/x11"]
 
 [workspace]
 # members = ["crates/*"]
@@ -40,3 +40,7 @@ members = [
 
 [[example]]
 name = "data_storage"
+
+[[example]]
+name = "mesh_generation"
+required-features = ["meshing"]
