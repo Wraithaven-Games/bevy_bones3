@@ -9,6 +9,7 @@ use std::marker::PhantomData;
 
 use bevy::prelude::*;
 use bones3_core::storage::BlockData;
+use prelude::ChunkMaterialList;
 
 use crate::ecs::components::*;
 use crate::ecs::systems::*;
@@ -21,6 +22,7 @@ pub mod vertex_data;
 /// Used to import common components and systems for Bones Cubed.
 pub mod prelude {
     pub use super::ecs::components::*;
+    pub use super::ecs::resources::*;
     pub use super::mesh::block_model::*;
     pub use super::mesh::error::*;
     pub use super::vertex_data::*;
@@ -45,6 +47,7 @@ where
         app.register_type::<RemeshChunk>()
             .register_type::<ChunkMesh>()
             .register_type::<ChunkMeshCameraAnchor>()
+            .insert_resource(ChunkMaterialList::default())
             .add_system(remesh_dirty_chunks::<T>);
     }
 }

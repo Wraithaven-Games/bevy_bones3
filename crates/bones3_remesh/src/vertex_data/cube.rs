@@ -60,9 +60,6 @@ const QUAD_INDICES: [u16; 6] = [0, 1, 2, 0, 2, 3];
 /// This builder is designed to make it easier to write a custom cube model to a
 /// temp mesh.
 pub struct CubeModelBuilder {
-    /// The location of the cube model within the chunk.
-    block_pos: IVec3,
-
     /// The local position of the cube within the block.
     local_pos: Vec3,
 
@@ -81,7 +78,6 @@ impl CubeModelBuilder {
     pub fn new() -> Self {
         // TODO Add texture atlas support
         Self {
-            block_pos: IVec3::ZERO,
             local_pos: Vec3::ZERO,
             size:      Vec3::ONE,
             occlusion: BlockOcclusion::empty(),
@@ -101,6 +97,12 @@ impl CubeModelBuilder {
         self.size = size;
         self
     }
+
+    /// Sets the faces of the cube that will be occluded.
+    pub fn set_occlusion(mut self, occlusion: BlockOcclusion) -> Self {
+        self.occlusion = occlusion;
+        self
+    }
 }
 
 impl Default for CubeModelBuilder {
@@ -110,8 +112,8 @@ impl Default for CubeModelBuilder {
 }
 
 impl BlockModelGenerator for CubeModelBuilder {
-    fn write_to_mesh(&self, mesh: &mut TempMesh) {
-        let pos = self.block_pos.as_vec3() + self.local_pos;
+    fn write_to_mesh(&self, mesh: &mut TempMesh, block_pos: IVec3) {
+        let pos = block_pos.as_vec3() + self.local_pos;
         let size = self.size;
         let occlusion = self.occlusion;
 
@@ -152,17 +154,6 @@ impl BlockModelGenerator for CubeModelBuilder {
             quad(20);
         }
     }
-
-    fn set_block_pos(&mut self, pos: IVec3) {
-        self.block_pos = pos;
-    }
-}
-
-impl CubeModelBuilder {
-    /// Sets the faces of the cube that will be occluded.
-    pub fn set_occlusion(&mut self, occlusion: BlockOcclusion) {
-        self.occlusion = occlusion;
-    }
 }
 
 #[cfg(test)]
@@ -174,11 +165,11 @@ mod test {
     #[test]
     fn half_slab() {
         let mut mesh = TempMesh::default();
-        let mut cube = CubeModelBuilder::new().set_size(Vec3::new(1.0, 0.5, 1.0));
+        let cube = CubeModelBuilder::new()
+            .set_size(Vec3::new(1.0, 0.5, 1.0))
+            .set_occlusion(BlockOcclusion::NEG_Y);
 
-        cube.set_block_pos(IVec3::new(3, 7, 2));
-        cube.set_occlusion(BlockOcclusion::NEG_Y);
-        cube.write_to_mesh(&mut mesh);
+        cube.write_to_mesh(&mut mesh, IVec3::new(3, 7, 2));
 
         #[rustfmt::skip]
         assert_eq!(mesh.vertices, vec![

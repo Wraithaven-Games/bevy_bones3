@@ -8,7 +8,13 @@ use bones3_core::storage::{BlockData, VoxelChunk, VoxelStorage};
 use ordered_float::OrderedFloat;
 
 use crate::mesh::builder;
-use crate::prelude::{BlockShape, ChunkMesh, ChunkMeshCameraAnchor, RemeshChunk};
+use crate::prelude::{
+    BlockShape,
+    ChunkMaterialList,
+    ChunkMesh,
+    ChunkMeshCameraAnchor,
+    RemeshChunk,
+};
 
 /// This system remeshes dirty voxel chunks. For all chunks with the RemeshChunk
 /// component, each frame, the chunk with the highest priority value
@@ -18,6 +24,7 @@ pub fn remesh_dirty_chunks<T>(
     dirty_chunks: Query<(Entity, &VoxelChunk, &GlobalTransform), With<RemeshChunk>>,
     chunk_data: VoxelQuery<&VoxelStorage<T>>,
     chunk_meshes: Query<(Entity, &Parent), With<ChunkMesh>>,
+    materials: Res<ChunkMaterialList>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut commands: Commands,
 ) where
@@ -53,7 +60,9 @@ pub fn remesh_dirty_chunks<T>(
         }
     };
 
-    let shape_builder = builder::build_chunk_mesh(get_block);
+    commands.entity(chunk_id).remove::<RemeshChunk>();
+
+    let shape_builder = builder::build_chunk_mesh(get_block, &materials);
     builder::apply_shape_builder(
         chunk_id,
         shape_builder,

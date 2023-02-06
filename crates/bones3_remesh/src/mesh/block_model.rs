@@ -107,11 +107,8 @@ impl Default for BlockOcclusion {
 /// A generator for creating a block model that can be written to a temporary
 /// chunk mesh.
 pub trait BlockModelGenerator {
-    /// Sets the position of the block that is being generated.
-    fn set_block_pos(&mut self, pos: IVec3);
-
     /// Writes the block model to the provided temporary chunk mesh.
-    fn write_to_mesh(&self, mesh: &mut TempMesh);
+    fn write_to_mesh(&self, mesh: &mut TempMesh, pos: IVec3);
 }
 
 /// A trait that can be defined for a block data object in order to specify how

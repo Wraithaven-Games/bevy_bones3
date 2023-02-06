@@ -4,7 +4,8 @@ use bevy::prelude::*;
 use bevy::render::mesh::Indices;
 use bevy::render::render_resource::PrimitiveTopology;
 
-use crate::prelude::{BlockModelGenerator, BlockOcclusion};
+use crate::ecs::resources::ChunkMaterialList;
+use crate::mesh::block_model::{BlockModelGenerator, BlockOcclusion};
 
 /// Acts as a temporary storage devices for mesh data that can be written to an
 /// actual Bevy mesh upon completion.
@@ -52,8 +53,7 @@ impl TempMesh {
 /// A temporary builder object that allows for block model shapes to be
 /// constructed in order to build a set of chunk meshes and corresponding
 /// material handles.
-#[derive(Default)]
-pub struct ShapeBuilder {
+pub struct ShapeBuilder<'a> {
     /// A list of temporary chunk meshes that will be created.
     meshes: Vec<TempMesh>,
 
@@ -62,9 +62,22 @@ pub struct ShapeBuilder {
 
     /// The current occlusion flags for the block currently being handled.
     occlusion: BlockOcclusion,
+
+    /// The list of materials that might be used by the chunk.
+    material_list: &'a ChunkMaterialList,
 }
 
-impl ShapeBuilder {
+impl<'a> ShapeBuilder<'a> {
+    /// Creates a new shape builder.
+    pub fn new(material_list: &'a ChunkMaterialList) -> Self {
+        Self {
+            meshes: vec![],
+            local_pos: IVec3::ZERO,
+            occlusion: BlockOcclusion::empty(),
+            material_list,
+        }
+    }
+
     /// Gets the position of the block currently being built.
     ///
     /// This value is treated as an offset that is provided to the block model
@@ -97,11 +110,12 @@ impl ShapeBuilder {
 
     /// Appends a new shape to this shape builder instance with the given
     /// material, based off the provided block model generator.
-    pub fn add_shape<G>(&mut self, mut shape: G, material: Handle<StandardMaterial>)
+    pub fn add_shape<G>(&mut self, shape: G, material_index: u16)
     where
         G: BlockModelGenerator,
     {
-        shape.set_block_pos(self.get_local_pos());
+        let block_pos = self.get_local_pos();
+        let material = self.material_list.get_material(material_index);
 
         let mesh = match self
             .meshes
@@ -118,7 +132,7 @@ impl ShapeBuilder {
             },
         };
 
-        shape.write_to_mesh(mesh);
+        shape.write_to_mesh(mesh, block_pos);
     }
 
     /// Converts this shape builder into an iterator over all temporary meshes

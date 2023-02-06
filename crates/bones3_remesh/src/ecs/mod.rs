@@ -2,4 +2,5 @@
 //! automatically triggering chunk mesh generation as needed.
 
 pub mod components;
+pub mod resources;
 pub mod systems;

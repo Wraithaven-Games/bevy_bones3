@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use bones3_core::prelude::*;
 
 use crate::mesh::block_model::{BlockOcclusion, BlockShape};
-use crate::prelude::ChunkMesh;
+use crate::prelude::{ChunkMaterialList, ChunkMesh};
 use crate::vertex_data::ShapeBuilder;
 
 /// Builds a temp mesh for a virtual 16x16x16 chunk with support for reading
@@ -17,12 +17,12 @@ use crate::vertex_data::ShapeBuilder;
 /// outside of the standard local block coordinates in each of the six cubic
 /// directions are also read using the `get_block` parameter function with
 /// values that would lie outside of a standard chunk block coordinate.
-pub fn build_chunk_mesh<T, G>(get_block: G) -> ShapeBuilder
+pub fn build_chunk_mesh<T, G>(get_block: G, material_list: &ChunkMaterialList) -> ShapeBuilder<'_>
 where
     T: BlockData + BlockShape,
     G: Fn(IVec3) -> T,
 {
-    let mut shape_builder = ShapeBuilder::default();
+    let mut shape_builder = ShapeBuilder::new(material_list);
 
     for block_pos in Region::CHUNK.iter() {
         let data = get_block(block_pos);
