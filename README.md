@@ -34,5 +34,5 @@ cargo add bevy_bones3
 ### Version Support
 
 | Bevy Version | Bones³ Version |
-| ------------ | -------------- |
-|          0.9 |            0.1 |
+| -----------: | -------------: |
+|        0.9.1 |  0.1.0 - 0.3.0 |
