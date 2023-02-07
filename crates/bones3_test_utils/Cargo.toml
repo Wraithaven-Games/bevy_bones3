@@ -1,6 +1,6 @@
 [package]
 name = "bones3_test_utils"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["TheDudeFromCI <thedudefromci@gmail.com>"]
 edition = "2021"
 description = "A collection of testing utilities, writing for Bones Cubed."

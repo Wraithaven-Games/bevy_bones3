@@ -201,7 +201,7 @@ dependencies = [
 
 [[package]]
 name = "bevy_bones3"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "bevy",
  "bones3_core",
@@ -782,7 +782,7 @@ checksum = "0d8c1fef690941d3e7788d328517591fecc684c084084702d6ff1641e993699a"
 
 [[package]]
 name = "bones3_core"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "bevy",
  "bones3_test_utils",
@@ -792,7 +792,7 @@ dependencies = [
 
 [[package]]
 name = "bones3_remesh"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "bevy",
  "bitflags",
@@ -805,7 +805,7 @@ dependencies = [
 
 [[package]]
 name = "bones3_test_utils"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "bevy",
 ]
