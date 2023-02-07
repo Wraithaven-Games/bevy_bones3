@@ -12,10 +12,17 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+
     - name: Deploy
-      uses: katyo/publish-crates@v1
+      uses: katyo/publish-crates@v2
       with:
         registry-token: ${{ secrets.CRATES_IO }}
+        ignore-unpublished-changes: true
+        no-verify: true
 
   bump_version:
     runs-on: ubuntu-latest
