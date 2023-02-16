@@ -17,6 +17,7 @@ use crate::mesh::block_model::BlockShape;
 
 pub mod ecs;
 pub mod mesh;
+pub mod query;
 pub mod vertex_data;
 
 /// Used to import common components and systems for Bones Cubed.
@@ -25,6 +26,7 @@ pub mod prelude {
     pub use super::ecs::resources::*;
     pub use super::mesh::block_model::*;
     pub use super::mesh::error::*;
+    pub use super::query::*;
     pub use super::vertex_data::*;
     pub use super::*;
 }
