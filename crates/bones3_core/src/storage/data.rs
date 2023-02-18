@@ -29,7 +29,7 @@ where
 {
     fn default() -> Self {
         Self {
-            blocks: Some(Box::new([T::default(); 4096])),
+            blocks: None,
         }
     }
 }
