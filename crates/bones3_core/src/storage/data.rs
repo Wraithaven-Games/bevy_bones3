@@ -20,7 +20,7 @@ where
 {
     /// The block data array for this chunk.
     #[reflect(ignore)]
-    blocks: Box<[T; 4096]>,
+    blocks: Option<Box<[T; 4096]>>,
 }
 
 impl<T> Default for VoxelStorage<T>
@@ -29,7 +29,7 @@ where
 {
     fn default() -> Self {
         Self {
-            blocks: Box::new([T::default(); 4096]),
+            blocks: None,
         }
     }
 }
@@ -45,7 +45,10 @@ where
     /// back ground to the other side.
     pub fn get_block(&self, local_pos: IVec3) -> T {
         let index = Region::CHUNK.point_to_index(local_pos & 15).unwrap();
-        self.blocks[index]
+        match &self.blocks {
+            Some(arr) => arr[index],
+            None => T::default(),
+        }
     }
 
     /// Sets the block data at the local grid coordinates within this storage
@@ -55,6 +58,13 @@ where
     /// back ground to the other side.
     pub fn set_block(&mut self, local_pos: IVec3, data: T) {
         let index = Region::CHUNK.point_to_index(local_pos & 15).unwrap();
-        self.blocks[index] = data
+        match &mut self.blocks {
+            Some(arr) => arr[index] = data,
+            None => {
+                let mut chunk = Box::new([T::default(); 4096]);
+                chunk[index] = data;
+                self.blocks = Some(chunk);
+            },
+        }
     }
 }

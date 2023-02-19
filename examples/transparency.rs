@@ -15,26 +15,24 @@ fn main() {
 }
 
 #[derive(Debug, Default, Clone, Copy)]
-enum BlockState {
+pub enum BlockState {
     #[default]
     Empty,
-    HalfSlab(u16),
     Solid(u16),
+    Liquid(u16),
 }
 
 impl BlockShape for BlockState {
     fn write_shape(&self, shape_builder: &mut ShapeBuilder) {
         match self {
             BlockState::Empty => {},
-            BlockState::HalfSlab(material) => {
+            BlockState::Solid(material) => {
                 shape_builder.add_shape(
-                    CubeModelBuilder::new()
-                        .set_size(Vec3::new(1.0, 0.5, 1.0))
-                        .set_occlusion(shape_builder.get_occlusion()),
+                    CubeModelBuilder::new().set_occlusion(shape_builder.get_occlusion()),
                     *material,
                 );
             },
-            BlockState::Solid(material) => {
+            BlockState::Liquid(material) => {
                 shape_builder.add_shape(
                     CubeModelBuilder::new().set_occlusion(shape_builder.get_occlusion()),
                     *material,
@@ -43,22 +41,29 @@ impl BlockShape for BlockState {
         }
     }
 
-    // This function cheks whenever two neighboring faces are blockin each other.
-    // This has the pourpose of culling non-visible faces, wich is essential to
-    // performance
-    fn check_occlude(&self, face: BlockOcclusion, _other: Self) -> bool {
+    // transparency is a bit harder to achive, but here is how:
+    fn check_occlude(&self, _: BlockOcclusion, other: Self) -> bool {
         match self {
-            BlockState::Empty => false, // if this tile is empty, it will never block a face
-            BlockState::Solid(_) => true, // solid blocks allways will allays block neighboring
-            // faces
-            BlockState::HalfSlab(_) => BlockOcclusion::NEG_Y.contains(face), /* A halfslab only
-                                                                              * blocks faces
-                                                                              * below it. */
+            BlockState::Empty => false,
+            BlockState::Solid(_) => {
+                match other {
+                    BlockState::Solid(_) => true,
+                    BlockState::Empty => false,
+                    BlockState::Liquid(_) => true,
+                }
+            },
+            BlockState::Liquid(_) => {
+                match other {
+                    BlockState::Solid(_) => false,
+                    BlockState::Empty => false,
+                    BlockState::Liquid(_) => true,
+                }
+            },
         }
     }
 }
 
-fn init(
+pub fn init(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut chunk_materials: ResMut<ChunkMaterialList>,
     mut commands: VoxelCommands,
@@ -88,6 +93,16 @@ fn init(
     let stone_index = chunk_materials.add_material(stone_handle);
     let grass_handle = materials.add(Color::DARK_GREEN.into());
     let grass_index = chunk_materials.add_material(grass_handle);
+    let water_handle = materials.add(
+        Color::Rgba {
+            red:   0.0,
+            green: 0.0,
+            blue:  0.8,
+            alpha: 0.8,
+        }
+        .into(),
+    );
+    let water_index = chunk_materials.add_material(water_handle);
 
     let mut world = commands.spawn_world(SpatialBundle::default());
 
@@ -106,10 +121,10 @@ fn init(
 
             if vert < shape.floor() {
                 storage.set_block(pos, BlockState::Solid(material_index));
-            } else if vert < (shape + 0.25).floor() {
-                storage.set_block(pos, BlockState::HalfSlab(material_index));
+            } else if vert + 0.5 > shape.floor() && vert < 10.0 {
+                storage.set_block(pos, BlockState::Liquid(water_index));
             } else {
-                storage.set_block(pos, BlockState::Empty);
+                storage.set_block(pos, BlockState::Empty)
             }
         }
 
