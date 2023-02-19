@@ -19,7 +19,7 @@ pub enum BlockState {
     #[default]
     Empty,
     Solid(u16),
-    Liquid(u16)
+    Liquid(u16),
 }
 
 impl BlockShape for BlockState {
@@ -43,20 +43,20 @@ impl BlockShape for BlockState {
 
     // transparency is a bit harder to achive, but here is how:
     fn check_occlude(&self, _: BlockOcclusion, other: Self) -> bool {
-        match self { 
+        match self {
             BlockState::Empty => false,
             BlockState::Solid(_) => {
                 match other {
-                    BlockState::Solid(_) => true, 
+                    BlockState::Solid(_) => true,
                     BlockState::Empty => false,
-                    BlockState::Liquid(_) => true
+                    BlockState::Liquid(_) => true,
                 }
             },
             BlockState::Liquid(_) => {
                 match other {
                     BlockState::Solid(_) => false,
                     BlockState::Empty => false,
-                    BlockState::Liquid(_) => true
+                    BlockState::Liquid(_) => true,
                 }
             },
         }
@@ -84,7 +84,7 @@ pub fn init(
             ..default()
         })
         .commands()
-            .insert_resource(AmbientLight {
+        .insert_resource(AmbientLight {
             color:      Color::WHITE,
             brightness: 2.5,
         });
@@ -93,7 +93,15 @@ pub fn init(
     let stone_index = chunk_materials.add_material(stone_handle);
     let grass_handle = materials.add(Color::DARK_GREEN.into());
     let grass_index = chunk_materials.add_material(grass_handle);
-    let water_handle = materials.add(Color::Rgba { red: 0.0, green: 0.0, blue: 0.8, alpha: 0.8 }.into());
+    let water_handle = materials.add(
+        Color::Rgba {
+            red:   0.0,
+            green: 0.0,
+            blue:  0.8,
+            alpha: 0.8,
+        }
+        .into(),
+    );
     let water_index = chunk_materials.add_material(water_handle);
 
     let mut world = commands.spawn_world(SpatialBundle::default());
@@ -113,7 +121,7 @@ pub fn init(
 
             if vert < shape.floor() {
                 storage.set_block(pos, BlockState::Solid(material_index));
-            } else if vert +0.5 > shape.floor() && vert < 10.0{
+            } else if vert + 0.5 > shape.floor() && vert < 10.0 {
                 storage.set_block(pos, BlockState::Liquid(water_index));
             } else {
                 storage.set_block(pos, BlockState::Empty)

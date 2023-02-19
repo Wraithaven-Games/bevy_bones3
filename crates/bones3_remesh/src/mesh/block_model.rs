@@ -120,6 +120,7 @@ pub trait BlockShape: BlockData {
     /// the shape builder as needed.
     fn write_shape(&self, shape_builder: &mut ShapeBuilder);
 
-    /// Checks if one tile is to occlude another tile. Returns True if face is occluded. 
+    /// Checks if one tile is to occlude another tile. Returns True if face is
+    /// occluded.
     fn check_occlude(&self, face: BlockOcclusion, other: Self) -> bool;
 }

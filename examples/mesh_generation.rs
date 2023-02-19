@@ -42,13 +42,18 @@ impl BlockShape for BlockState {
             },
         }
     }
-    // This function cheks whenever two neighboring faces are blockin each other. This has the pourpose 
-    // of culling non-visible faces, wich is essential to performance
+
+    // This function cheks whenever two neighboring faces are blockin each other.
+    // This has the pourpose of culling non-visible faces, wich is essential to
+    // performance
     fn check_occlude(&self, face: BlockOcclusion, _other: Self) -> bool {
         match self {
             BlockState::Empty => false, // if this tile is empty, it will never block a face
-            BlockState::Solid(_) => true, // solid blocks allways will allays block neighboring faces
-            BlockState::HalfSlab(_) => BlockOcclusion::NEG_Y.contains(face) // A halfslab only blocks faces below it. 
+            BlockState::Solid(_) => true, /* solid blocks allways will allays block neighboring
+                                            * faces */
+            BlockState::HalfSlab(_) => BlockOcclusion::NEG_Y.contains(face), /* A halfslab only
+                                                                              * blocks faces
+                                                                              * below it. */
         }
     }
 }

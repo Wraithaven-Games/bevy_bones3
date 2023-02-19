@@ -47,7 +47,7 @@ where
         let index = Region::CHUNK.point_to_index(local_pos & 15).unwrap();
         match &self.blocks {
             Some(arr) => arr[index],
-            None => T::default() 
+            None => T::default(),
         }
     }
 
@@ -64,7 +64,7 @@ where
                 let mut chunk = Box::new([T::default(); 4096]);
                 chunk[index] = data;
                 self.blocks = Some(chunk);
-            }
+            },
         }
     }
 }

@@ -28,9 +28,7 @@ where
         let data = get_block(block_pos);
 
         let check_occlusion = |occlusion: &mut BlockOcclusion, face: BlockOcclusion| {
-            if get_block(block_pos + face.into_offset())
-                .check_occlude(face, get_block(block_pos))
-            {
+            if get_block(block_pos + face.into_offset()).check_occlude(face, get_block(block_pos)) {
                 occlusion.insert(face);
             }
         };
