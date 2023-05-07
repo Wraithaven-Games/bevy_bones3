@@ -7,6 +7,7 @@ use bones3_core::prelude::*;
 use crate::vertex_data::{ShapeBuilder, TempMesh};
 
 bitflags! {
+    #[derive(Copy, Clone)]
     /// A bitflag-based enum that defines how a block is currently being occluded.
     pub struct BlockOcclusion: u8 {
         /// If true, the block is occluded in the negative X direction.
