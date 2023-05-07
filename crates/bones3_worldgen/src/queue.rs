@@ -3,14 +3,23 @@
 
 use bevy::prelude::*;
 use bevy::tasks::{AsyncComputeTaskPool, Task};
+use bones3_core::prelude::{
+    BlockData,
+    VoxelChunk,
+    VoxelCommands,
+    VoxelQueryError,
+    VoxelStorage,
+    VoxelWorld,
+};
+#[cfg(feature = "meshing")]
+use bones3_remesh::query::VoxelRemeshCommands;
 use futures_lite::future;
 use itertools::Itertools;
 use ordered_float::OrderedFloat;
 use sort_by_derive::SortBy;
 
-use super::{ChunkAnchor, WorldGeneratorHandler};
-use crate::prelude::{VoxelCommands, VoxelQueryError};
-use crate::storage::{BlockData, VoxelChunk, VoxelStorage, VoxelWorld};
+use crate::anchor::ChunkAnchor;
+use crate::generator::WorldGeneratorHandler;
 
 /// This component indicates that the chunk is currently being loaded in an
 /// async task, and will have a voxel storage component replace this component
@@ -35,11 +44,9 @@ pub fn force_load_chunks<T>(
     T: BlockData,
 {
     for (transform, anchor) in anchors.iter() {
-        #[cfg(feature = "trace")]
-        let _profiler_guard = info_span!("world_gen", target = "force_load_chunks").entered();
-
         let world_id = anchor.get_world();
-        if !commands.has_world(world_id) {
+
+        let Ok(mut world_commands) = commands.get_world(world_id) else {
             continue;
         };
 
@@ -49,7 +56,7 @@ pub fn force_load_chunks<T>(
         };
 
         for chunk_coords in chunk_iter {
-            match commands.find_chunk(world_id, chunk_coords, true) {
+            match world_commands.get_chunk(chunk_coords) {
                 Ok(_) => continue,
                 Err(VoxelQueryError::ChunkNotFound(..)) => {
                     let block_data = match generators.get(world_id).ok().map(|g| g.generator()) {
@@ -57,19 +64,14 @@ pub fn force_load_chunks<T>(
                         None => VoxelStorage::<T>::default(),
                     };
 
-                    commands
-                        .spawn_chunk(world_id, chunk_coords, block_data)
+                    let chunk_commands = world_commands
+                        .spawn_chunk(chunk_coords, block_data)
                         .unwrap();
 
                     #[cfg(feature = "meshing")]
-                    commands
-                        .remesh_chunk_neighbors(world_id, chunk_coords)
-                        .unwrap();
-
-                    #[cfg(feature = "physics")]
-                    commands.rebuild_collision(world_id, chunk_coords).unwrap();
+                    chunk_commands.remesh_chunk_neighbors();
                 },
-                Err(err) => panic!("Unexpected state: {:?}", err),
+                Err(err) => panic!("Unexpected state: {err:?}"),
             }
         }
     }
@@ -79,24 +81,21 @@ pub fn force_load_chunks<T>(
 /// anchors to begin loading.
 pub fn load_chunks_async(anchors: Query<(&Transform, &ChunkAnchor)>, mut commands: VoxelCommands) {
     for (transform, anchor) in anchors.iter() {
-        #[cfg(feature = "trace")]
-        let _profiler_guard = info_span!("world_gen", target = "find_new_chunks").entered();
-
         let world_id = anchor.get_world();
-        if !commands.has_world(world_id) {
+        let Ok(mut world_commands) = commands.get_world(world_id) else {
             continue;
         };
 
         let anchor_pos = transform.translation.as_ivec3() >> 4;
         for chunk_coords in anchor.iter(anchor_pos) {
-            match commands.find_chunk(world_id, chunk_coords, true) {
+            match world_commands.get_chunk(chunk_coords) {
                 Ok(_) => continue,
                 Err(VoxelQueryError::ChunkNotFound(..)) => {
-                    commands
-                        .spawn_chunk(world_id, chunk_coords, PendingLoadChunkTask)
+                    world_commands
+                        .spawn_chunk(chunk_coords, PendingLoadChunkTask)
                         .unwrap();
                 },
-                Err(err) => panic!("Unexpected state: {:?}", err),
+                Err(err) => panic!("Unexpected state: {err:?}"),
             }
         }
 
@@ -136,9 +135,6 @@ pub fn push_chunk_async_queue<T>(
         return;
     }
 
-    #[cfg(feature = "trace")]
-    let profiler_guard = info_span!("world_gen", target = "find_next_pending_chunks").entered();
-
     let next_chunks = pending_tasks
         .iter()
         .map(|q| {
@@ -157,12 +153,6 @@ pub fn push_chunk_async_queue<T>(
         })
         .k_smallest(available_slots as usize)
         .map(|p| p.query);
-
-    #[cfg(feature = "trace")]
-    profiler_guard.exit();
-
-    #[cfg(feature = "trace")]
-    let _profiler_guard = info_span!("world_gen", target = "start_async_tasks").entered();
 
     for (chunk_id, pending_task) in next_chunks {
         let world_id = pending_task.world_id();
@@ -190,42 +180,26 @@ pub fn push_chunk_async_queue<T>(
 /// This system takes in all active async chunk loading tasks and, for each one
 /// that is finished, push the results to the target voxel chunk.
 pub fn finish_chunk_loading<T: BlockData>(
-    mut load_chunk_tasks: Query<(&mut LoadChunkTask<T>, &VoxelChunk)>,
+    mut load_chunk_tasks: Query<(Entity, &mut LoadChunkTask<T>, &VoxelChunk)>,
     mut commands: VoxelCommands,
 ) {
-    #[cfg(feature = "trace")]
-    let _profiler_guard = info_span!("world_gen", target = "finalize_chunks").entered();
-
-    for (mut task, chunk_meta) in load_chunk_tasks.iter_mut() {
-        #[cfg(feature = "trace")]
-        let poll_task_guard = info_span!("world_gen", target = "poll_load_task").entered();
-
+    for (chunk_id, mut task, chunk_meta) in load_chunk_tasks.iter_mut() {
         let Some(chunk_data) = future::block_on(future::poll_once(&mut task.0)) else {
             continue;
         };
 
-        #[cfg(feature = "trace")]
-        poll_task_guard.exit();
-
-        #[cfg(feature = "trace")]
-        let _single_prof_guard =
-            info_span!("world_gen", target = "finalize_chunk", world_id = ?chunk_meta.world_id())
-                .entered();
-
         commands
-            .find_chunk(chunk_meta.world_id(), chunk_meta.chunk_coords(), false)
-            .unwrap()
+            .commands()
+            .entity(chunk_id)
             .remove::<LoadChunkTask<T>>()
             .insert(chunk_data);
 
         #[cfg(feature = "meshing")]
         commands
-            .remesh_chunk_neighbors(chunk_meta.world_id(), chunk_meta.chunk_coords())
-            .unwrap();
-
-        #[cfg(feature = "physics")]
-        commands
-            .rebuild_collision(chunk_meta.world_id(), chunk_meta.chunk_coords())
-            .unwrap();
+            .get_world(chunk_meta.world_id())
+            .unwrap()
+            .get_chunk(chunk_meta.chunk_coords())
+            .unwrap()
+            .remesh_chunk_neighbors();
     }
 }

@@ -4,8 +4,7 @@
 use std::sync::Arc;
 
 use bevy::prelude::*;
-
-use crate::storage::{BlockData, VoxelStorage};
+use bones3_core::prelude::{BlockData, VoxelStorage};
 
 /// A trait that handles the generation of block data when new chunks are
 /// loaded.

@@ -1,8 +1,7 @@
 //! This module contains the Bevy component that implements the chunk anchor.
 
 use bevy::prelude::*;
-
-use crate::prelude::Region;
+use bones3_core::prelude::Region;
 
 /// Defines an anchor within a world that forces a radius of chunks around
 /// itself to stay loaded.

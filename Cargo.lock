@@ -204,8 +204,10 @@ name = "bevy_bones3"
 version = "0.3.0"
 dependencies = [
  "bevy",
+ "bevy_flycam",
  "bones3_core",
  "bones3_remesh",
+ "bones3_worldgen",
  "rand",
 ]
 
@@ -309,6 +311,15 @@ checksum = "962b6bb0d30e92ec2e6c29837acce9e55b920733a634e7c3c5fd5a514bea7a24"
 dependencies = [
  "bevy_macro_utils",
  "encase_derive_impl",
+]
+
+[[package]]
+name = "bevy_flycam"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a032f6fc53b6ab0901c2b5d01034691a6b27f1ae49dd035ccf392705eec09b5f"
+dependencies = [
+ "bevy",
 ]
 
 [[package]]
@@ -811,6 +822,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "bones3_worldgen"
+version = "0.3.0"
+dependencies = [
+ "bevy",
+ "bones3_core",
+ "bones3_remesh",
+ "futures-lite",
+ "itertools",
+ "ordered-float",
+ "sort_by_derive",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1086,6 +1110,12 @@ name = "downcast-rs"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9ea835d29036a4087793836fa931b08837ad5e957da9e23886b29586fb9b6650"
+
+[[package]]
+name = "either"
+version = "1.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7fcaabb2fef8c910e7f4c7ce9f67a1283a1715879a7c230ca9d6d1ae31f16d91"
 
 [[package]]
 name = "encase"
@@ -1452,6 +1482,15 @@ dependencies = [
  "js-sys",
  "wasm-bindgen",
  "web-sys",
+]
+
+[[package]]
+name = "itertools"
+version = "0.10.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b0fd2260e829bddf4cb6ea802289de2f86d6a7a690192fbe91b3f46e0f2c8473"
+dependencies = [
+ "either",
 ]
 
 [[package]]
@@ -2097,6 +2136,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a507befe795404456341dfab10cef66ead4c041f62b8b11bbb92bffe5d0953e0"
 dependencies = [
  "serde",
+]
+
+[[package]]
+name = "sort_by_derive"
+version = "0.1.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fafe89a66bf4d2d70ab21e6c50be24cd2befdf4a9cc991456e2332216dade93d"
+dependencies = [
+ "either",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
