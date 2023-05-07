@@ -13,11 +13,13 @@ categories = ["games", "game-engines"]
 exclude = [".github/", "crates/"]
 
 [dependencies]
-bevy = { version = "0.10.1", default-features = false, features = [] }
+bevy = { version = "0.10.1", default-features = false, features = ["bevy_core_pipeline"] }
 bones3_core = { path = "crates/bones3_core", version = "0.3.0" }
 bones3_remesh = { path = "crates/bones3_remesh", version = "0.3.0", optional = true }
+bones3_worldgen = { path = "crates/bones3_worldgen", version = "0.3.0", optional = true }
 
 [dev-dependencies]
+bevy_flycam = "0.9.0"
 rand = "0.8.5"
 
 [profile.dev]
@@ -27,15 +29,29 @@ opt-level = 1
 opt-level = 3
 
 [features]
-default = ["meshing", "bevy/bevy_core_pipeline"]
-meshing = ["bones3_remesh", "bevy/bevy_asset", "bevy/bevy_render", "bevy/x11", "bevy/bevy_pbr"]
+default = [
+  "meshing",
+  "worldgen"
+]
+meshing = [
+  "bones3_remesh",
+  "bevy/bevy_asset",
+  "bevy/bevy_render",
+  "bevy/x11",
+  "bevy/bevy_pbr",
+  "bones3_worldgen?/meshing"
+]
+worldgen = [
+  "bones3_worldgen"
+]
 
 [workspace]
 # members = ["crates/*"]
 members = [
   "crates/bones3_core",
   "crates/bones3_test_utils",
-  "crates/bones3_remesh"
+  "crates/bones3_remesh",
+  "crates/bones3_worldgen"
 ]
 
 [[example]]
@@ -44,3 +60,7 @@ name = "data_storage"
 [[example]]
 name = "mesh_generation"
 required-features = ["meshing"]
+
+[[example]]
+name = "infinite_terrain"
+required-features = ["meshing", "worldgen"]

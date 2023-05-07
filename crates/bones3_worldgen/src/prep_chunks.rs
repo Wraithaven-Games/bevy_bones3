@@ -2,8 +2,7 @@
 //! generated chunk correctly inherit required components.
 
 use bevy::prelude::*;
-
-use crate::storage::{VoxelChunk, VoxelWorld};
+use bones3_core::prelude::{VoxelChunk, VoxelWorld};
 
 /// This system checks for newly created voxel chunks that are children of
 /// world with transforms. As they are discovered, Spacial bundles are applied
