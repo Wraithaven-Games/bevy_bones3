@@ -16,20 +16,6 @@ use bevy::prelude::*;
 /// An extension for the standard Bevy app that adds more unit test helper
 /// functions.
 pub trait TestApp {
-    /// Causes the provided system to be executed once, immediately on the
-    /// current thread.
-    ///
-    /// The system is not added to the app.
-    fn run_system_once<Params>(&mut self, system: impl IntoSystemDescriptor<Params>);
-
-    /// Causes the provided system set to be executed once, immediately, on
-    /// parallel threads. Any queued commands are not executed until all systems
-    /// within the list have been executed, as if it were a standard frame
-    /// updating containing only the indicated system set.
-    ///
-    /// The system set is not added to the app.
-    fn run_system_set_once(&mut self, system: SystemSet);
-
     /// Collects all events of the indicated type currently within the system
     /// and returns an iterator over all of them.
     ///
@@ -39,16 +25,6 @@ pub trait TestApp {
 }
 
 impl TestApp for App {
-    fn run_system_once<Params>(&mut self, system: impl IntoSystemDescriptor<Params>) {
-        SystemStage::single(system).run(&mut self.world);
-    }
-
-    fn run_system_set_once(&mut self, systems: SystemSet) {
-        SystemStage::parallel()
-            .with_system_set(systems)
-            .run(&mut self.world);
-    }
-
     fn collect_events<E: Event + Clone>(&mut self) -> Box<dyn Iterator<Item = E>> {
         let event_res = self.world.resource::<Events<E>>();
         let mut event_reader = event_res.get_reader();

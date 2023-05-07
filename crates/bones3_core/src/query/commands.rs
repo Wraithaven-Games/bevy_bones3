@@ -278,8 +278,6 @@ impl Command for UpdateChunkPointersAction {
 
 #[cfg(test)]
 mod test {
-    use bones3_test_utils::TestApp;
-
     use super::*;
 
     #[test]
@@ -292,7 +290,7 @@ mod test {
                 .spawn_chunk(IVec3::new(13, 15, 17), ())
                 .unwrap();
         }
-        app.run_system_once(init);
+        Schedule::new().add_system(init).run(&mut app.world);
 
         fn validate(world_query: Query<Entity, With<VoxelWorld>>, mut commands: VoxelCommands) {
             let world_id = world_query.get_single().unwrap();
@@ -302,7 +300,7 @@ mod test {
                 .get_chunk(IVec3::new(13, 15, 17))
                 .unwrap();
         }
-        app.run_system_once(validate);
+        Schedule::new().add_system(validate).run(&mut app.world);
     }
 
     #[test]
@@ -315,7 +313,7 @@ mod test {
         fn init(mut commands: VoxelCommands) {
             commands.spawn_world(());
         }
-        app.run_system_once(init);
+        Schedule::new().add_system(init).run(&mut app.world);
 
         fn a(world_query: Query<Entity, With<VoxelWorld>>, mut commands: VoxelCommands) {
             let world_id = world_query.get_single().unwrap();
@@ -335,6 +333,9 @@ mod test {
                 .unwrap();
         }
 
-        app.run_system_set_once(SystemSet::new().with_system(a).with_system(b));
+        Schedule::new()
+            .add_system(a)
+            .add_system(b)
+            .run(&mut app.world);
     }
 }

@@ -214,7 +214,6 @@ where
 
 #[cfg(test)]
 mod test {
-    use bones3_test_utils::TestApp;
     use pretty_assertions::assert_eq;
 
     use super::*;
@@ -241,7 +240,7 @@ mod test {
             world_b.spawn_chunk(IVec3::ONE, ChunkMarker).unwrap();
             world_b.spawn_chunk(IVec3::NEG_X, ()).unwrap();
         }
-        app.run_system_once(init);
+        Schedule::new().add_system(init).run(&mut app.world);
 
         fn update(
             world_query: Query<Entity, With<WorldMarker>>,
@@ -255,6 +254,6 @@ mod test {
             assert_eq!(iter.next(), Some(&VoxelChunk::new(world_id, IVec3::ONE)));
             assert_eq!(iter.next(), None);
         }
-        app.run_system_once(update);
+        Schedule::new().add_system(update).run(&mut app.world);
     }
 }
