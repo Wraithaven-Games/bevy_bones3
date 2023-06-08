@@ -17,12 +17,14 @@ use prelude::*;
 pub mod math;
 pub mod query;
 pub mod storage;
+pub mod util;
 
 /// Used to import common components and systems for Bones Cubed.
 pub mod prelude {
     pub use super::math::*;
     pub use super::query::*;
     pub use super::storage::*;
+    pub use super::util::*;
     pub use super::*;
 }
 

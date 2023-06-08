@@ -8,7 +8,7 @@ use bevy::prelude::*;
 pub struct VoxelWorld;
 
 /// A pointer to indicate the coordinates of a chunk.
-#[derive(Debug, Component, Reflect, PartialEq, Eq)]
+#[derive(Debug, Component, Reflect, PartialEq, Eq, Hash)]
 pub struct VoxelChunk {
     /// The world id this chunk is in.
     world_id: Entity,

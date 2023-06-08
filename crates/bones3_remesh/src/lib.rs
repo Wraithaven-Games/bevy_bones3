@@ -4,12 +4,14 @@
 #![warn(clippy::missing_docs_in_private_items)]
 #![warn(rustdoc::invalid_codeblock_attributes)]
 #![warn(rustdoc::invalid_html_tags)]
+#![allow(clippy::type_complexity)]
 
 use std::marker::PhantomData;
 
 use bevy::prelude::*;
 use bones3_core::storage::BlockData;
-use prelude::ChunkMaterialList;
+use bones3_core::util::anchor::ChunkAnchorPlugin;
+use ecs::resources::ChunkMaterialList;
 
 use crate::ecs::components::*;
 use crate::ecs::systems::*;
@@ -19,17 +21,6 @@ pub mod ecs;
 pub mod mesh;
 pub mod query;
 pub mod vertex_data;
-
-/// Used to import common components and systems for Bones Cubed.
-pub mod prelude {
-    pub use super::ecs::components::*;
-    pub use super::ecs::resources::*;
-    pub use super::mesh::block_model::*;
-    pub use super::mesh::error::*;
-    pub use super::query::*;
-    pub use super::vertex_data::*;
-    pub use super::*;
-}
 
 /// The remesh plugin for Bones Cubed.
 #[derive(Default)]
@@ -46,10 +37,23 @@ where
     T: BlockData + BlockShape,
 {
     fn build(&self, app: &mut App) {
-        app.register_type::<RemeshChunk>()
+        app.add_plugin(ChunkAnchorPlugin::<RemeshAnchor>::default())
+            .register_type::<RemeshChunk>()
             .register_type::<ChunkMesh>()
-            .register_type::<ChunkMeshCameraAnchor>()
+            .register_type::<RemeshChunkTask<T>>()
             .insert_resource(ChunkMaterialList::default())
-            .add_system(remesh_dirty_chunks::<T>);
+            .add_system(
+                remesh_dirty_chunks::<T>
+                    .in_base_set(CoreSet::PostUpdate)
+                    .in_set(RemeshSet),
+            );
     }
 }
+
+/// The type definition to use for the `ChunkAnchorPlugin`.
+#[derive(Default)]
+pub struct RemeshAnchor;
+
+/// The system set in which all chunks are remeshed.
+#[derive(Debug, SystemSet, PartialEq, Eq, Hash, Clone, Copy)]
+pub struct RemeshSet;

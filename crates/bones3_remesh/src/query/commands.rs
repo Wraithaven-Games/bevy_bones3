@@ -3,7 +3,7 @@
 use bevy::prelude::*;
 use bones3_core::query::VoxelChunkCommands;
 
-use crate::prelude::RemeshChunk;
+use crate::ecs::components::RemeshChunk;
 
 /// An extension trait for VoxelChunkCommands that allow for a chunk to trigger
 /// remeshing.

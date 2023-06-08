@@ -7,34 +7,17 @@
 //!
 //! This module requires the `world_gen` feature to use.
 
+#![allow(clippy::type_complexity)]
+
 use std::marker::PhantomData;
 
 use bevy::prelude::*;
 use bones3_core::storage::BlockData;
-use prelude::{
-    finish_chunk_loading,
-    force_load_chunks,
-    load_chunks_async,
-    push_chunk_async_queue,
-    ChunkAnchor,
-    LoadChunkTask,
-    PendingLoadChunkTask,
-    WorldGeneratorHandler,
-};
-use prep_chunks::setup_chunk_transforms;
+use bones3_core::util::anchor::{ChunkAnchorPlugin, ChunkAnchorSet};
 
-pub mod anchor;
-pub mod generator;
-pub mod prep_chunks;
-pub mod queue;
+use crate::ecs::{components, systems};
 
-/// Used to import common components and systems for Bones Cubed.
-pub mod prelude {
-    pub use super::anchor::*;
-    pub use super::generator::*;
-    pub use super::prep_chunks::*;
-    pub use super::queue::*;
-}
+pub mod ecs;
 
 #[derive(Default)]
 pub struct Bones3WorldGenPlugin<T>
@@ -50,14 +33,48 @@ where
     T: BlockData,
 {
     fn build(&self, app: &mut App) {
-        app.register_type::<ChunkAnchor>()
-            .register_type::<WorldGeneratorHandler<T>>()
-            .register_type::<LoadChunkTask<T>>()
-            .register_type::<PendingLoadChunkTask>()
-            .add_system(setup_chunk_transforms)
-            .add_system(force_load_chunks::<T>)
-            .add_system(load_chunks_async)
-            .add_system(push_chunk_async_queue::<T>)
-            .add_system(finish_chunk_loading::<T>);
+        app.add_plugin(ChunkAnchorPlugin::<WorldGenAnchor>::default())
+            .register_type::<components::WorldGeneratorHandler<T>>()
+            .register_type::<components::LoadChunkTask<T>>()
+            .register_type::<components::PendingLoadChunkTask>()
+            .add_system(
+                systems::create_chunk_entities
+                    .in_base_set(CoreSet::PostUpdate)
+                    .in_set(WorldGenSet::CreateChunks),
+            )
+            .add_system(
+                systems::unload_chunks
+                    .in_base_set(CoreSet::PostUpdate)
+                    .in_set(WorldGenSet::UnloadChunks),
+            )
+            .add_system(
+                systems::queue_chunks::<T>
+                    .in_base_set(CoreSet::Update)
+                    .in_set(WorldGenSet::QueueChunks),
+            )
+            .add_system(
+                systems::push_chunk_async_queue::<T>
+                    .in_base_set(CoreSet::Update)
+                    .in_set(WorldGenSet::StartAsyncTask),
+            )
+            .add_system(
+                systems::finish_chunk_loading::<T>
+                    .in_base_set(CoreSet::Update)
+                    .in_set(WorldGenSet::FinishAsyncTask),
+            )
+            .configure_set(WorldGenSet::CreateChunks.after(ChunkAnchorSet::UpdateCoords))
+            .configure_set(WorldGenSet::UnloadChunks.after(ChunkAnchorSet::UpdatePriorities));
     }
 }
+
+#[derive(Debug, SystemSet, PartialEq, Eq, Hash, Clone, Copy)]
+pub enum WorldGenSet {
+    CreateChunks,
+    UnloadChunks,
+    QueueChunks,
+    StartAsyncTask,
+    FinishAsyncTask,
+}
+
+#[derive(Default)]
+pub struct WorldGenAnchor;

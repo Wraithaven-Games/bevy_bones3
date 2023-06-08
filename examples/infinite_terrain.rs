@@ -1,9 +1,13 @@
-#![allow(dead_code)]
-
 use bevy::prelude::*;
 use bevy_bones3::prelude::*;
 use bevy_flycam::PlayerPlugin;
-use bones3_worldgen::Bones3WorldGenPlugin;
+use bones3_core::util::anchor::ChunkAnchor;
+use bones3_remesh::ecs::resources::ChunkMaterialList;
+use bones3_remesh::mesh::block_model::{BlockOcclusion, BlockShape};
+use bones3_remesh::vertex_data::{CubeModelBuilder, ShapeBuilder};
+use bones3_remesh::{Bones3RemeshPlugin, RemeshAnchor};
+use bones3_worldgen::ecs::components::{WorldGenerator, WorldGeneratorHandler};
+use bones3_worldgen::{Bones3WorldGenPlugin, WorldGenAnchor};
 
 fn main() {
     App::new()
@@ -12,7 +16,13 @@ fn main() {
         .add_plugin(Bones3RemeshPlugin::<BlockState>::default())
         .add_plugin(Bones3WorldGenPlugin::<BlockState>::default())
         .add_plugin(PlayerPlugin)
-        .add_startup_system(init.at_end())
+        .add_system(init.run_if(
+            // This condition is just to ensure we run the system after the camera is initialized
+            // in the PlayerPlugin.
+            |camera: Query<(), (With<Camera3d>, Without<ChunkAnchor<WorldGenAnchor>>)>| {
+                !camera.is_empty()
+            },
+        ))
         .run();
 }
 
@@ -36,11 +46,34 @@ impl BlockShape for BlockState {
         }
     }
 
-    fn get_occludes(&self) -> BlockOcclusion {
+    fn check_occlude(&self, _: BlockOcclusion, _: Self) -> bool {
         match self {
-            BlockState::Empty => BlockOcclusion::empty(),
-            BlockState::Solid(_) => BlockOcclusion::all(),
+            BlockState::Empty => false,
+            BlockState::Solid(_) => true,
         }
+    }
+}
+
+struct GrassyHillsWorld {
+    material_index: u16,
+}
+
+impl WorldGenerator<BlockState> for GrassyHillsWorld {
+    fn generate_chunk(&self, chunk_coords: IVec3) -> VoxelStorage<BlockState> {
+        let mut block_storage = VoxelStorage::default();
+
+        for block_pos in Region::CHUNK.shift(chunk_coords * 16).iter() {
+            let pos = block_pos.as_vec3();
+            let block_state = if pos.y <= f32::sin(pos.x / 64.0) * f32::sin(pos.z / 64.0) * 16.0 {
+                BlockState::Solid(self.material_index)
+            } else {
+                BlockState::Empty
+            };
+
+            block_storage.set_block(block_pos, block_state);
+        }
+
+        block_storage
     }
 }
 
@@ -51,9 +84,17 @@ fn init(
     mut commands: VoxelCommands,
 ) {
     let stone_handle = materials.add(Color::WHITE.into());
-    chunk_materials.add_material(stone_handle);
+    let stone_index = chunk_materials.add_material(stone_handle);
 
-    let world_id = commands.spawn_world(SpatialBundle::default()).id();
+    let world_id = commands
+        .spawn_world((
+            SpatialBundle::default(),
+            WorldGeneratorHandler::from(GrassyHillsWorld {
+                material_index: stone_index,
+            }),
+        ))
+        .id();
+
     let commands = commands.commands();
 
     commands.spawn(DirectionalLightBundle {
@@ -72,5 +113,12 @@ fn init(
 
     commands
         .entity(camera.single())
-        .insert(ChunkAnchor::new(world_id, 10, 12, 2));
+        .insert(ChunkAnchor::<WorldGenAnchor>::new(
+            world_id,
+            UVec3::new(10, 10, 10),
+        ))
+        .insert(ChunkAnchor::<RemeshAnchor>::new(
+            world_id,
+            UVec3::new(10, 10, 10),
+        ));
 }

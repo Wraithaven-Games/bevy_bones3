@@ -1,10 +1,21 @@
-//! This module defines the world generator trait and how it should be
-//! implemented.
-
 use std::sync::Arc;
 
 use bevy::prelude::*;
-use bones3_core::prelude::{BlockData, VoxelStorage};
+use bevy::tasks::Task;
+use bones3_core::storage::{BlockData, VoxelStorage};
+
+/// This component indicates that the chunk is currently being loaded in an
+/// async task, and will have a voxel storage component replace this component
+/// once it is done.
+#[derive(Debug, Component, Reflect)]
+#[component(storage = "SparseSet")]
+pub struct LoadChunkTask<T: BlockData>(#[reflect(ignore)] pub(crate) Task<VoxelStorage<T>>);
+
+/// A marker component that indicates that the target chunk is still waiting to
+/// be loaded.
+#[derive(Debug, Component, Reflect)]
+#[component(storage = "SparseSet")]
+pub struct PendingLoadChunkTask;
 
 /// A trait that handles the generation of block data when new chunks are
 /// loaded.

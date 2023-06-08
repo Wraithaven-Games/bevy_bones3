@@ -4,8 +4,9 @@
 use bevy::prelude::*;
 use bones3_core::prelude::*;
 
+use crate::ecs::components::ChunkMesh;
+use crate::ecs::resources::ChunkMaterialList;
 use crate::mesh::block_model::{BlockOcclusion, BlockShape};
-use crate::prelude::{ChunkMaterialList, ChunkMesh};
 use crate::vertex_data::ShapeBuilder;
 
 /// Builds a temp mesh for a virtual 16x16x16 chunk with support for reading
