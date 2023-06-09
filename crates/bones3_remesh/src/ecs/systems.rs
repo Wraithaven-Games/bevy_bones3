@@ -82,8 +82,9 @@ where
     let mut queue = PriorityQueue::new();
 
     for (anchor_recipient, chunk_meta, chunk_id) in chunks.iter() {
-        let Some(priority) = anchor_recipient.priority else {
-            continue;
+        let priority = match anchor_recipient.priority {
+            Some(p) => p,
+            None => f32::NEG_INFINITY,
         };
 
         queue.push(
