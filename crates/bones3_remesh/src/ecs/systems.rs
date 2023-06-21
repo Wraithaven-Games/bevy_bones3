@@ -36,7 +36,7 @@ pub fn remesh_dirty_chunks<T>(
 ) where
     T: BlockData + BlockShape,
 {
-    let max_chunks = 2;
+    let max_chunks = 4;
 
     for (chunk_coords, chunk_id, world_id) in get_max_chunks(&dirty_chunks, max_chunks) {
         let data_region = Region::from_points(IVec3::NEG_ONE, IVec3::ONE);
