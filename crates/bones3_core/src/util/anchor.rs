@@ -120,7 +120,7 @@ where
     /// specified radius. All weights and bias are set to their default values.
     pub fn new(world_id: Entity, radius: UVec3) -> Self {
         Self {
-            _phantom: PhantomData::default(),
+            _phantom: PhantomData,
             radius,
             weight: 1.0,
             dir_bias: Vec3::ZERO,
