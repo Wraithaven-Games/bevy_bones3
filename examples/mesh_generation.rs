@@ -4,6 +4,11 @@ use std::ops::Mul;
 
 use bevy::prelude::*;
 use bevy_bones3::prelude::*;
+use bones3_remesh::ecs::components::RemeshChunk;
+use bones3_remesh::ecs::resources::ChunkMaterialList;
+use bones3_remesh::mesh::block_model::{BlockOcclusion, BlockShape};
+use bones3_remesh::vertex_data::{CubeModelBuilder, ShapeBuilder};
+use bones3_remesh::Bones3RemeshPlugin;
 
 fn main() {
     App::new()

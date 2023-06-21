@@ -1,8 +1,8 @@
-#![allow(dead_code)]
-
 use std::ops::Mul;
+use std::time::Duration;
 
 use bevy::prelude::*;
+use bevy::time::common_conditions::on_timer;
 use bevy_bones3::prelude::*;
 use bones3_remesh::ecs::components::RemeshChunk;
 use bones3_remesh::ecs::resources::ChunkMaterialList;
@@ -16,59 +16,39 @@ fn main() {
         .add_plugin(Bones3CorePlugin::<BlockState>::default())
         .add_plugin(Bones3RemeshPlugin::<BlockState>::default())
         .add_startup_system(init)
+        .add_system(update_wave.run_if(on_timer(Duration::from_secs_f32(0.25))))
         .run();
 }
 
 #[derive(Debug, Default, Clone, Copy)]
-pub enum BlockState {
+enum BlockState {
     #[default]
     Empty,
-    Solid(u16),
-    Liquid(u16),
+    Solid,
 }
 
 impl BlockShape for BlockState {
     fn write_shape(&self, shape_builder: &mut ShapeBuilder) {
         match self {
             BlockState::Empty => {},
-            BlockState::Solid(material) => {
+            BlockState::Solid => {
                 shape_builder.add_shape(
                     CubeModelBuilder::new().set_occlusion(shape_builder.get_occlusion()),
-                    *material,
-                );
-            },
-            BlockState::Liquid(material) => {
-                shape_builder.add_shape(
-                    CubeModelBuilder::new().set_occlusion(shape_builder.get_occlusion()),
-                    *material,
+                    0,
                 );
             },
         }
     }
 
-    // transparency is a bit harder to achieve, but here is how:
-    fn check_occlude(&self, _: BlockOcclusion, other: Self) -> bool {
+    fn check_occlude(&self, _: BlockOcclusion, _other: Self) -> bool {
         match self {
             BlockState::Empty => false,
-            BlockState::Solid(_) => {
-                match other {
-                    BlockState::Solid(_) => true,
-                    BlockState::Empty => false,
-                    BlockState::Liquid(_) => true,
-                }
-            },
-            BlockState::Liquid(_) => {
-                match other {
-                    BlockState::Solid(_) => false,
-                    BlockState::Empty => false,
-                    BlockState::Liquid(_) => true,
-                }
-            },
+            BlockState::Solid => true,
         }
     }
 }
 
-pub fn init(
+fn init(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut chunk_materials: ResMut<ChunkMaterialList>,
     mut commands: VoxelCommands,
@@ -95,44 +75,12 @@ pub fn init(
         });
 
     let stone_handle = materials.add(Color::GRAY.into());
-    let stone_index = chunk_materials.add_material(stone_handle);
-    let grass_handle = materials.add(Color::DARK_GREEN.into());
-    let grass_index = chunk_materials.add_material(grass_handle);
-    let water_handle = materials.add(
-        Color::Rgba {
-            red:   0.0,
-            green: 0.0,
-            blue:  0.8,
-            alpha: 0.8,
-        }
-        .into(),
-    );
-    let water_index = chunk_materials.add_material(water_handle);
+    chunk_materials.add_material(stone_handle);
 
     let mut world = commands.spawn_world(SpatialBundle::default());
 
     let chunk_radius = IVec3::new(3, 0, 3);
     for chunk_coords in Region::from_points(-chunk_radius, chunk_radius).iter() {
-        let mut storage = VoxelStorage::<BlockState>::default();
-        for pos in Region::CHUNK.shift(chunk_coords * 16).iter() {
-            let distance = pos
-                .as_vec3()
-                .mul(Vec3::new(1.0, 0.0, 1.0))
-                .distance(Vec3::new(7.5, 0.0, 7.5));
-            let shape = ((distance * distance) / 128.0).sin() * 4.0 + 7.0;
-            let vert = pos.y as f32;
-
-            let material_index = if shape - vert <= 2.0 { grass_index } else { stone_index };
-
-            if vert < shape.floor() {
-                storage.set_block(pos, BlockState::Solid(material_index));
-            } else if vert + 0.5 > shape.floor() && vert < 10.0 {
-                storage.set_block(pos, BlockState::Liquid(water_index));
-            } else {
-                storage.set_block(pos, BlockState::Empty)
-            }
-        }
-
         world
             .spawn_chunk(
                 chunk_coords,
@@ -141,10 +89,42 @@ pub fn init(
                         transform: Transform::from_translation(chunk_coords.as_vec3() * 16.0),
                         ..default()
                     },
-                    storage,
-                    RemeshChunk,
+                    VoxelStorage::<BlockState>::default(),
                 ),
             )
             .unwrap();
     }
+}
+
+fn update_wave(
+    time: Res<Time>,
+    mut chunks: Query<(&mut VoxelStorage<BlockState>, &VoxelChunk, Entity)>,
+    mut commands: Commands,
+) {
+    for (_, _, chunk_id) in chunks.iter() {
+        commands.entity(chunk_id).insert(RemeshChunk);
+    }
+
+    let secs = time.elapsed_seconds();
+
+    chunks
+        .par_iter_mut()
+        .for_each_mut(|(mut storage, chunk_meta, _)| {
+            let chunk_coords = chunk_meta.chunk_coords();
+            for pos in Region::CHUNK.shift(chunk_coords * 16).iter() {
+                let distance = pos
+                    .as_vec3()
+                    .mul(Vec3::new(1.0, 0.0, 1.0))
+                    .distance(Vec3::new(7.5, 0.0, 7.5));
+
+                let shape = ((distance * distance) / 128.0 - secs).sin() * 4.0 + 7.0;
+                let vert = pos.y as f32;
+
+                if vert < shape.floor() {
+                    storage.set_block(pos, BlockState::Solid);
+                } else {
+                    storage.set_block(pos, BlockState::Empty);
+                }
+            }
+        });
 }

@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.0
+### Added
+- World generation plugin
+- Chunk anchors
+- Automatic chunk loading and unloading
+- Added remeshing functions to voxel commands
+
 ## v0.2.0
 ### Added
 - Added chunk mesh generation support

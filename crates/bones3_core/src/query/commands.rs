@@ -232,6 +232,11 @@ impl<'world, 'state, 'cmd_ref> VoxelChunkCommands<'world, 'state, 'cmd_ref> {
             .unwrap()
     }
 
+    /// Gets the voxel world command queue for the world that this chunk is in.
+    pub fn as_world_commands(self) -> VoxelWorldCommands<'world, 'state, 'cmd_ref> {
+        self.voxel_commands.get_world(self.world_id).unwrap()
+    }
+
     /// Gets the id of the world that the chunk being handled is apart of.
     pub fn world_id(&self) -> Entity {
         self.world_id

@@ -2,6 +2,8 @@
 //! meshes and interact with the remesh systems.
 
 use bevy::prelude::*;
+use bevy::tasks::Task;
+use bones3_core::storage::{BlockData, VoxelStorage};
 
 /// A temporary marker component that indicates that the target chunk needs to
 /// be remeshed.
@@ -14,9 +16,7 @@ pub struct RemeshChunk;
 #[derive(Component, Reflect)]
 pub struct ChunkMesh;
 
-/// This component, usually placed on the camera, is used to determine the
-/// priority value for remeshing dirty chunks. If multiple chunks are awaiting a
-/// remesh update, chunks that are closer in world space to this anchor are
-/// prioritized over chunks that are further away.
-#[derive(Component, Reflect)]
-pub struct ChunkMeshCameraAnchor;
+/// this component represents an active chunk that is currently being remeshed.
+#[derive(Debug, Component, Reflect)]
+#[component(storage = "SparseSet")]
+pub struct RemeshChunkTask<T: BlockData>(#[reflect(ignore)] pub(crate) Task<VoxelStorage<T>>);
