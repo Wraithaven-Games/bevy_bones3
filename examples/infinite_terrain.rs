@@ -84,7 +84,7 @@ fn init(
     mut commands: VoxelCommands,
 ) {
     let stone_handle = materials.add(Color::WHITE.into());
-    let stone_index = chunk_materials.add_material(stone_handle);
+    let stone_index = chunk_materials.add_material(stone_handle, None);
 
     let world_id = commands
         .spawn_world((

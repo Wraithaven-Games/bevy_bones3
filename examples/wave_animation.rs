@@ -75,7 +75,7 @@ fn init(
         });
 
     let stone_handle = materials.add(Color::GRAY.into());
-    chunk_materials.add_material(stone_handle);
+    chunk_materials.add_material(stone_handle, None);
 
     let mut world = commands.spawn_world(SpatialBundle::default());
 
