@@ -109,7 +109,7 @@ jobs:
         cargo -V
 
     - name: Verify Clippy
-      run: cargo +nightly clippy --all-targets --all-features --workspace -- -D warnings
+      run: cargo clippy --all-targets --all-features --workspace -- -D warnings
 
 
   docs:
