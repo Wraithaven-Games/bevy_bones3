@@ -90,9 +90,9 @@ fn init(
         });
 
     let stone_handle = materials.add(Color::GRAY.into());
-    let stone_index = chunk_materials.add_material(stone_handle);
+    let stone_index = chunk_materials.add_material(stone_handle, None);
     let grass_handle = materials.add(Color::DARK_GREEN.into());
-    let grass_index = chunk_materials.add_material(grass_handle);
+    let grass_index = chunk_materials.add_material(grass_handle, None);
 
     let mut world = commands.spawn_world(SpatialBundle::default());
 
