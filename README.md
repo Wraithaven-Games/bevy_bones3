@@ -19,11 +19,13 @@
 
 ## Overview
 
-Bones³, pronounced *Bones Cubed*, is a voxel based world manipulation and data storage plugin for [Bevy](https://github.com/bevyengine/bevy). It is designed to store data in an infinite and expandable storage grid in a manner that is useful for both writing ECS-compatible game logic and world management.
+**Please note that this library is still in Alpha. Expect inconsistent API changes and delayed releases as the library continues to work towards a more stable state.**
+
+Bones³, pronounced *Bones Cubed*, is a voxel-based world manipulation and data storage plugin for [Bevy](https://github.com/bevyengine/bevy). It is designed to store data in an infinite and expandable storage grid in a manner that is useful for both writing ECS-compatible game logic and world management.
 
 ### Goals
 
-While this project is easily capable of being used as a foundation for a voxel game engine, that is not it's sole purpose. This project aims for a more general purpose data storage and world generation system, to allow for a wider variety of projects with many art styles and game play mechanics.
+While this project is easily capable of being used as a foundation for a voxel game engine, that is not its sole purpose. This project aims for a more general-purpose data storage and world generation system to allow for a wider variety of projects with many art styles and gameplay mechanics.
 
 ## Installation
 This crate can be installed using:
