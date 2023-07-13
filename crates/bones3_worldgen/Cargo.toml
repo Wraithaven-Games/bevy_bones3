@@ -1,6 +1,6 @@
 [package]
 name = "bones3_worldgen"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["TheDudeFromCI <thedudefromci@gmail.com>"]
 edition = "2021"
 description = "A handler for the automatic loading and unloading of chunks based on world anchors."
@@ -16,8 +16,8 @@ meshing = ["bones3_remesh"]
 
 [dependencies]
 bevy = { version = "0.10.1", default-features = false, features = [] }
-bones3_core = { path = "../bones3_core", version = "0.3.0" }
-bones3_remesh = { path = "../bones3_remesh", version = "0.3.0", optional = true }
+bones3_core = { path = "../bones3_core", version = "0.4.0" }
+bones3_remesh = { path = "../bones3_remesh", version = "0.4.0", optional = true }
 futures-lite = "1.13.0"
 itertools = "0.10.5"
 ordered-float = "3.7.0"
