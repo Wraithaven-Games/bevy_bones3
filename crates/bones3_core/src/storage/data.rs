@@ -1,13 +1,14 @@
 //! Handler components for storing data within a chunk.
 
 use bevy::prelude::*;
+use bevy::reflect::TypePath;
 
 use crate::math::Region;
 
 /// A blanket trait for data types that can be safely stored within a voxel
 /// world.
-pub trait BlockData: Default + Copy + Send + Sync + 'static {}
-impl<T> BlockData for T where T: Default + Copy + Send + Sync + 'static {}
+pub trait BlockData: Default + Copy + Send + Sync + TypePath + 'static {}
+impl<T> BlockData for T where T: Default + Copy + Send + Sync + TypePath + 'static {}
 
 /// A storage component for containing a 16x16x16 grid of block data. This is
 /// usually intended to be used on a voxel chunk component.
@@ -18,6 +19,7 @@ pub struct VoxelStorage<T>
 where
     T: BlockData,
 {
+    // TODO: Do not ignore this. It makes serialization of worlds impossible.
     /// The block data array for this chunk.
     #[reflect(ignore)]
     blocks: Option<Box<[T; 4096]>>,

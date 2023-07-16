@@ -37,21 +37,17 @@ where
     T: BlockData + BlockShape,
 {
     fn build(&self, app: &mut App) {
-        app.add_plugin(ChunkAnchorPlugin::<RemeshAnchor>::default())
-            .register_type::<RemeshChunk>()
+        app.register_type::<RemeshChunk>()
             .register_type::<ChunkMesh>()
             .register_type::<RemeshChunkTask<T>>()
             .insert_resource(ChunkMaterialList::default())
-            .add_system(
-                remesh_dirty_chunks::<T>
-                    .in_base_set(CoreSet::PostUpdate)
-                    .in_set(RemeshSet),
-            );
+            .add_plugins(ChunkAnchorPlugin::<RemeshAnchor>::default())
+            .add_systems(PostUpdate, remesh_dirty_chunks::<T>);
     }
 }
 
 /// The type definition to use for the `ChunkAnchorPlugin`.
-#[derive(Default)]
+#[derive(Default, Reflect)]
 pub struct RemeshAnchor;
 
 /// The system set in which all chunks are remeshed.

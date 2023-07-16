@@ -13,13 +13,12 @@ categories = ["games", "game-engines"]
 exclude = [".github/", "crates/"]
 
 [dependencies]
-bevy = { version = "0.10.1", default-features = false, features = ["bevy_core_pipeline"] }
+bevy = { version = "0.11.0", default-features = false, features = ["bevy_core_pipeline"] }
 bones3_core = { path = "crates/bones3_core", version = "0.4.0" }
 bones3_remesh = { path = "crates/bones3_remesh", version = "0.4.0", optional = true }
 bones3_worldgen = { path = "crates/bones3_worldgen", version = "0.4.0", optional = true }
 
 [dev-dependencies]
-bevy_flycam = "0.10.1"
 rand = "0.8.5"
 
 [profile.dev]
@@ -39,6 +38,9 @@ meshing = [
   "bevy/bevy_render",
   "bevy/x11",
   "bevy/bevy_pbr",
+  "bevy/ktx2",
+  "bevy/zstd",
+  "bevy/tonemapping_luts",
   "bones3_worldgen?/meshing"
 ]
 worldgen = [
@@ -46,13 +48,7 @@ worldgen = [
 ]
 
 [workspace]
-# members = ["crates/*"]
-members = [
-  "crates/bones3_core",
-  "crates/bones3_test_utils",
-  "crates/bones3_remesh",
-  "crates/bones3_worldgen"
-]
+members = ["crates/*"]
 
 [[example]]
 name = "data_storage"

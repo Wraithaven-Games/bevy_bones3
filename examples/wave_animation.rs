@@ -12,15 +12,20 @@ use bones3_remesh::Bones3RemeshPlugin;
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
-        .add_plugin(Bones3CorePlugin::<BlockState>::default())
-        .add_plugin(Bones3RemeshPlugin::<BlockState>::default())
-        .add_startup_system(init)
-        .add_system(update_wave.run_if(on_timer(Duration::from_secs_f32(0.25))))
+        .add_plugins((
+            DefaultPlugins,
+            Bones3CorePlugin::<BlockState>::default(),
+            Bones3RemeshPlugin::<BlockState>::default(),
+        ))
+        .add_systems(Startup, init)
+        .add_systems(
+            Update,
+            update_wave.run_if(on_timer(Duration::from_secs_f32(0.25))),
+        )
         .run();
 }
 
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Reflect, Clone, Copy)]
 enum BlockState {
     #[default]
     Empty,

@@ -33,37 +33,33 @@ where
     T: BlockData,
 {
     fn build(&self, app: &mut App) {
-        app.add_plugin(ChunkAnchorPlugin::<WorldGenAnchor>::default())
-            .register_type::<components::WorldGeneratorHandler<T>>()
+        app.register_type::<components::WorldGeneratorHandler<T>>()
             .register_type::<components::LoadChunkTask<T>>()
             .register_type::<components::PendingLoadChunkTask>()
-            .add_system(
-                systems::create_chunk_entities
-                    .in_base_set(CoreSet::PostUpdate)
-                    .in_set(WorldGenSet::CreateChunks),
+            .add_plugins(ChunkAnchorPlugin::<WorldGenAnchor>::default())
+            .add_systems(
+                Update,
+                (
+                    systems::queue_chunks::<T>.in_set(WorldGenSet::QueueChunks),
+                    systems::push_chunk_async_queue::<T>.in_set(WorldGenSet::StartAsyncTask),
+                    systems::finish_chunk_loading::<T>.in_set(WorldGenSet::FinishAsyncTask),
+                ),
             )
-            .add_system(
-                systems::unload_chunks
-                    .in_base_set(CoreSet::PostUpdate)
-                    .in_set(WorldGenSet::UnloadChunks),
+            .add_systems(
+                PostUpdate,
+                (
+                    systems::create_chunk_entities.in_set(WorldGenSet::CreateChunks),
+                    systems::unload_chunks.in_set(WorldGenSet::UnloadChunks),
+                ),
             )
-            .add_system(
-                systems::queue_chunks::<T>
-                    .in_base_set(CoreSet::Update)
-                    .in_set(WorldGenSet::QueueChunks),
+            .configure_set(
+                PostUpdate,
+                WorldGenSet::CreateChunks.after(ChunkAnchorSet::UpdateCoords),
             )
-            .add_system(
-                systems::push_chunk_async_queue::<T>
-                    .in_base_set(CoreSet::Update)
-                    .in_set(WorldGenSet::StartAsyncTask),
-            )
-            .add_system(
-                systems::finish_chunk_loading::<T>
-                    .in_base_set(CoreSet::Update)
-                    .in_set(WorldGenSet::FinishAsyncTask),
-            )
-            .configure_set(WorldGenSet::CreateChunks.after(ChunkAnchorSet::UpdateCoords))
-            .configure_set(WorldGenSet::UnloadChunks.after(ChunkAnchorSet::UpdatePriorities));
+            .configure_set(
+                PostUpdate,
+                WorldGenSet::UnloadChunks.after(ChunkAnchorSet::UpdatePriorities),
+            );
     }
 }
 
@@ -76,5 +72,5 @@ pub enum WorldGenSet {
     FinishAsyncTask,
 }
 
-#[derive(Default)]
+#[derive(Default, Reflect)]
 pub struct WorldGenAnchor;

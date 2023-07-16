@@ -8,6 +8,7 @@ use bones3_core::storage::{BlockData, VoxelStorage};
 /// async task, and will have a voxel storage component replace this component
 /// once it is done.
 #[derive(Debug, Component, Reflect)]
+#[reflect(from_reflect = false)]
 #[component(storage = "SparseSet")]
 pub struct LoadChunkTask<T: BlockData>(#[reflect(ignore)] pub(crate) Task<VoxelStorage<T>>);
 
@@ -31,6 +32,7 @@ where
 
 /// A component wrapper for storing a WorldGenerator object.
 #[derive(Component, Reflect)]
+#[reflect(from_reflect = false)]
 pub struct WorldGeneratorHandler<T>(#[reflect(ignore)] Arc<dyn WorldGenerator<T>>)
 where
     T: BlockData;

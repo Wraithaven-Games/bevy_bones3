@@ -14,9 +14,8 @@ keywords = ["bones3"]
 default = []
 
 [dependencies]
-bevy = { version = "0.10.1", default-features = false, features = [] }
+bevy = { version = "0.11.0", default-features = false, features = [] }
 thiserror = "1.0.40"
 
 [dev-dependencies]
-bones3_test_utils = { path = "../bones3_test_utils", version = "0.4.0" }
 pretty_assertions = "1.3.0"

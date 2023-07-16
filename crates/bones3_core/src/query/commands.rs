@@ -267,7 +267,7 @@ struct UpdateChunkPointersAction {
 }
 
 impl Command for UpdateChunkPointersAction {
-    fn write(self, world: &mut World) {
+    fn apply(self, world: &mut World) {
         let mut pointers = world.get_mut::<ChunkEntityPointers>(self.world_id).unwrap();
 
         if pointers.get_chunk_entity(self.chunk_coords).is_some() && self.chunk_id.is_some() {
@@ -295,7 +295,7 @@ mod test {
                 .spawn_chunk(IVec3::new(13, 15, 17), ())
                 .unwrap();
         }
-        Schedule::new().add_system(init).run(&mut app.world);
+        Schedule::new().add_systems(init).run(&mut app.world);
 
         fn validate(world_query: Query<Entity, With<VoxelWorld>>, mut commands: VoxelCommands) {
             let world_id = world_query.get_single().unwrap();
@@ -305,7 +305,7 @@ mod test {
                 .get_chunk(IVec3::new(13, 15, 17))
                 .unwrap();
         }
-        Schedule::new().add_system(validate).run(&mut app.world);
+        Schedule::new().add_systems(validate).run(&mut app.world);
     }
 
     #[test]
@@ -318,7 +318,7 @@ mod test {
         fn init(mut commands: VoxelCommands) {
             commands.spawn_world(());
         }
-        Schedule::new().add_system(init).run(&mut app.world);
+        Schedule::new().add_systems(init).run(&mut app.world);
 
         fn a(world_query: Query<Entity, With<VoxelWorld>>, mut commands: VoxelCommands) {
             let world_id = world_query.get_single().unwrap();
@@ -339,8 +339,8 @@ mod test {
         }
 
         Schedule::new()
-            .add_system(a)
-            .add_system(b)
+            .add_systems(a)
+            .add_systems(b)
             .run(&mut app.world);
     }
 }

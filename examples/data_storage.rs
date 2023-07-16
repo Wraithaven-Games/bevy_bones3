@@ -6,15 +6,15 @@ use bevy_bones3::prelude::*;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugin(Bones3CorePlugin::<BlockState>::default())
-        .add_startup_system(init)
-        .add_system(update)
+        .add_plugins(Bones3CorePlugin::<BlockState>::default())
+        .add_systems(Startup, init)
+        .add_systems(Update, update)
         .run();
 }
 
 // When specifying a block data container, it needs to implement the Default,
 // Clone, and Copy traits.
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Reflect, Clone, Copy)]
 struct BlockState {
     // Any further data can be stored inside and an instance of it will be stored
     // for every grid value within the infinite world. Here, the values being
@@ -28,7 +28,7 @@ struct BlockState {
     pub light_value: i32,
 }
 
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Reflect, Clone, Copy)]
 enum FurnitureValue {
     #[default]
     None,
