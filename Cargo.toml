@@ -38,6 +38,9 @@ meshing = [
   "bevy/bevy_render",
   "bevy/x11",
   "bevy/bevy_pbr",
+  "bevy/ktx2",
+  "bevy/zstd",
+  "bevy/tonemapping_luts",
   "bones3_worldgen?/meshing"
 ]
 worldgen = [

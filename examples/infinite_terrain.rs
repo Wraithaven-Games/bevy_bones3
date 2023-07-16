@@ -17,6 +17,7 @@ fn main() {
             Bones3WorldGenPlugin::<BlockState>::default(),
         ))
         .add_systems(Startup, init)
+        .add_systems(Update, fly)
         .run();
 }
 
@@ -106,7 +107,7 @@ fn init(
 
     commands.spawn((
             Camera3dBundle {
-                transform: Transform::from_xyz(0.0, 32.0, 0.0),
+                transform: Transform::from_xyz(0.0, 32.0, 0.0).with_rotation(Quat::from_euler(EulerRot::XYZ, -0.5, 0.0, 0.0)),
                 ..default()
             },
             ChunkAnchor::<WorldGenAnchor>::new(
@@ -118,4 +119,15 @@ fn init(
                 UVec3::new(10, 10, 10),
             )
         ));
+}
+
+fn fly(
+    time: Res<Time>,
+    mut camera_query: Query<&mut Transform, With<Camera3d>>,
+) {
+    let dist = time.delta_seconds() * 5.0;
+
+    for mut transform in camera_query.iter_mut() {
+        transform.translation += Vec3::NEG_Z * dist;
+    }
 }
