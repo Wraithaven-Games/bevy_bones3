@@ -27,13 +27,18 @@ where
         app.register_type::<ChunkAnchor<T>>()
             .register_type::<ChunkAnchorRecipient<T>>()
             .add_systems(
-                PostUpdate, (
-                    (clear_coords_without_transform::<T>, update_coords::<T>).in_set(ChunkAnchorSet::UpdateCoords),
+                PostUpdate,
+                (
+                    (clear_coords_without_transform::<T>, update_coords::<T>)
+                        .in_set(ChunkAnchorSet::UpdateCoords),
                     update_chunk_priorities::<T>.in_set(ChunkAnchorSet::UpdatePriorities),
-                    attach_chunk_recipient_comp::<T>.in_set(ChunkAnchorSet::AttachChunkComponents)
-                )
+                    attach_chunk_recipient_comp::<T>.in_set(ChunkAnchorSet::AttachChunkComponents),
+                ),
             )
-            .configure_set(PostUpdate, ChunkAnchorSet::UpdateCoords.before(ChunkAnchorSet::UpdatePriorities));
+            .configure_set(
+                PostUpdate,
+                ChunkAnchorSet::UpdateCoords.before(ChunkAnchorSet::UpdatePriorities),
+            );
     }
 }
 

@@ -37,17 +37,29 @@ where
             .register_type::<components::LoadChunkTask<T>>()
             .register_type::<components::PendingLoadChunkTask>()
             .add_plugins(ChunkAnchorPlugin::<WorldGenAnchor>::default())
-            .add_systems(Update, (
-                systems::queue_chunks::<T>.in_set(WorldGenSet::QueueChunks),
-                systems::push_chunk_async_queue::<T>.in_set(WorldGenSet::StartAsyncTask),
-                systems::finish_chunk_loading::<T>.in_set(WorldGenSet::FinishAsyncTask),
-            ))
-            .add_systems(PostUpdate, (
-                systems::create_chunk_entities.in_set(WorldGenSet::CreateChunks),
-                systems::unload_chunks.in_set(WorldGenSet::UnloadChunks),
-            ))
-            .configure_set(PostUpdate, WorldGenSet::CreateChunks.after(ChunkAnchorSet::UpdateCoords))
-            .configure_set(PostUpdate, WorldGenSet::UnloadChunks.after(ChunkAnchorSet::UpdatePriorities));
+            .add_systems(
+                Update,
+                (
+                    systems::queue_chunks::<T>.in_set(WorldGenSet::QueueChunks),
+                    systems::push_chunk_async_queue::<T>.in_set(WorldGenSet::StartAsyncTask),
+                    systems::finish_chunk_loading::<T>.in_set(WorldGenSet::FinishAsyncTask),
+                ),
+            )
+            .add_systems(
+                PostUpdate,
+                (
+                    systems::create_chunk_entities.in_set(WorldGenSet::CreateChunks),
+                    systems::unload_chunks.in_set(WorldGenSet::UnloadChunks),
+                ),
+            )
+            .configure_set(
+                PostUpdate,
+                WorldGenSet::CreateChunks.after(ChunkAnchorSet::UpdateCoords),
+            )
+            .configure_set(
+                PostUpdate,
+                WorldGenSet::UnloadChunks.after(ChunkAnchorSet::UpdatePriorities),
+            );
     }
 }
 

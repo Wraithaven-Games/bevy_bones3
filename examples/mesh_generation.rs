@@ -15,7 +15,7 @@ fn main() {
         .add_plugins((
             DefaultPlugins,
             Bones3CorePlugin::<BlockState>::default(),
-            Bones3RemeshPlugin::<BlockState>::default()
+            Bones3RemeshPlugin::<BlockState>::default(),
         ))
         .add_systems(Startup, init)
         .run();

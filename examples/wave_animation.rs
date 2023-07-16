@@ -15,10 +15,13 @@ fn main() {
         .add_plugins((
             DefaultPlugins,
             Bones3CorePlugin::<BlockState>::default(),
-            Bones3RemeshPlugin::<BlockState>::default()
+            Bones3RemeshPlugin::<BlockState>::default(),
         ))
         .add_systems(Startup, init)
-        .add_systems(Update, update_wave.run_if(on_timer(Duration::from_secs_f32(0.25))))
+        .add_systems(
+            Update,
+            update_wave.run_if(on_timer(Duration::from_secs_f32(0.25))),
+        )
         .run();
 }
 
