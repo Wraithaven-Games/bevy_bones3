@@ -18,5 +18,6 @@ pub struct ChunkMesh;
 
 /// this component represents an active chunk that is currently being remeshed.
 #[derive(Debug, Component, Reflect)]
+#[reflect(from_reflect = false)]
 #[component(storage = "SparseSet")]
 pub struct RemeshChunkTask<T: BlockData>(#[reflect(ignore)] pub(crate) Task<VoxelStorage<T>>);

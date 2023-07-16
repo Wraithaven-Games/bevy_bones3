@@ -4,6 +4,7 @@
 use std::marker::PhantomData;
 
 use bevy::prelude::*;
+use bevy::reflect::TypePath;
 
 use crate::prelude::{Region, VoxelChunk, VoxelWorld};
 
@@ -12,7 +13,7 @@ use crate::prelude::{Region, VoxelChunk, VoxelWorld};
 #[derive(Default)]
 pub struct ChunkAnchorPlugin<T>
 where
-    T: Send + Sync + Default,
+    T: Send + Sync + Default + TypePath,
 {
     /// Default placeholder for T.
     _phantom: PhantomData<T>,
@@ -20,32 +21,19 @@ where
 
 impl<T> Plugin for ChunkAnchorPlugin<T>
 where
-    T: Send + Sync + Default + 'static,
+    T: Send + Sync + Default + TypePath + 'static,
 {
     fn build(&self, app: &mut App) {
         app.register_type::<ChunkAnchor<T>>()
             .register_type::<ChunkAnchorRecipient<T>>()
-            .add_system(
-                clear_coords_without_transform::<T>
-                    .in_base_set(CoreSet::PostUpdate)
-                    .in_set(ChunkAnchorSet::UpdateCoords),
+            .add_systems(
+                PostUpdate, (
+                    (clear_coords_without_transform::<T>, update_coords::<T>).in_set(ChunkAnchorSet::UpdateCoords),
+                    update_chunk_priorities::<T>.in_set(ChunkAnchorSet::UpdatePriorities),
+                    attach_chunk_recipient_comp::<T>.in_set(ChunkAnchorSet::AttachChunkComponents)
+                )
             )
-            .add_system(
-                update_coords::<T>
-                    .in_base_set(CoreSet::PostUpdate)
-                    .in_set(ChunkAnchorSet::UpdateCoords),
-            )
-            .add_system(
-                update_chunk_priorities::<T>
-                    .in_base_set(CoreSet::PostUpdate)
-                    .in_set(ChunkAnchorSet::UpdatePriorities),
-            )
-            .add_system(
-                attach_chunk_recipient_comp::<T>
-                    .in_base_set(CoreSet::PostUpdate)
-                    .in_set(ChunkAnchorSet::AttachChunkComponents),
-            )
-            .configure_set(ChunkAnchorSet::UpdatePriorities.after(ChunkAnchorSet::UpdateCoords));
+            .configure_set(PostUpdate, ChunkAnchorSet::UpdateCoords.before(ChunkAnchorSet::UpdatePriorities));
     }
 }
 
@@ -70,7 +58,7 @@ pub enum ChunkAnchorSet {
 ///
 /// This component should be attached to an entity with a SpatialBundle
 /// attached, otherwise it will not perform any actions.
-#[derive(Debug, Component, Reflect, Clone)]
+#[derive(Debug, Reflect, Component, Clone)]
 pub struct ChunkAnchor<T>
 where
     T: Send + Sync,
@@ -172,10 +160,10 @@ where
 
 /// This component is attached to new chunks entities and is used to hold the
 /// current priority levels as determined by all existing chunk anchors.
-#[derive(Debug, Default, Component, Reflect, Clone)]
+#[derive(Debug, Default, Reflect, Component, Clone)]
 pub struct ChunkAnchorRecipient<T>
 where
-    T: Send + Sync + Default,
+    T: Send + Sync,
 {
     /// Default placeholder for T.
     #[reflect(ignore)]
@@ -234,7 +222,7 @@ pub(crate) fn update_chunk_priorities<T>(
     anchors: Query<&ChunkAnchor<T>>,
     mut chunks: Query<(&mut ChunkAnchorRecipient<T>, &VoxelChunk)>,
 ) where
-    T: Send + Sync + Default + 'static,
+    T: Send + Sync + 'static,
 {
     chunks
         .par_iter_mut()

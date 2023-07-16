@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy_bones3::prelude::*;
-use bevy_flycam::PlayerPlugin;
 use bones3_core::util::anchor::ChunkAnchor;
 use bones3_remesh::ecs::resources::ChunkMaterialList;
 use bones3_remesh::mesh::block_model::{BlockOcclusion, BlockShape};
@@ -11,22 +10,17 @@ use bones3_worldgen::{Bones3WorldGenPlugin, WorldGenAnchor};
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
-        .add_plugin(Bones3CorePlugin::<BlockState>::default())
-        .add_plugin(Bones3RemeshPlugin::<BlockState>::default())
-        .add_plugin(Bones3WorldGenPlugin::<BlockState>::default())
-        .add_plugin(PlayerPlugin)
-        .add_system(init.run_if(
-            // This condition is just to ensure we run the system after the camera is initialized
-            // in the PlayerPlugin.
-            |camera: Query<(), (With<Camera3d>, Without<ChunkAnchor<WorldGenAnchor>>)>| {
-                !camera.is_empty()
-            },
+        .add_plugins((
+            DefaultPlugins,
+            Bones3CorePlugin::<BlockState>::default(),
+            Bones3RemeshPlugin::<BlockState>::default(),
+            Bones3WorldGenPlugin::<BlockState>::default(),
         ))
+        .add_systems(Startup, init)
         .run();
 }
 
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Reflect, Clone, Copy)]
 enum BlockState {
     #[default]
     Empty,
@@ -78,7 +72,6 @@ impl WorldGenerator<BlockState> for GrassyHillsWorld {
 }
 
 fn init(
-    camera: Query<Entity, With<Camera3d>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut chunk_materials: ResMut<ChunkMaterialList>,
     mut commands: VoxelCommands,
@@ -111,14 +104,18 @@ fn init(
         brightness: 2.5,
     });
 
-    commands
-        .entity(camera.single())
-        .insert(ChunkAnchor::<WorldGenAnchor>::new(
-            world_id,
-            UVec3::new(10, 10, 10),
-        ))
-        .insert(ChunkAnchor::<RemeshAnchor>::new(
-            world_id,
-            UVec3::new(10, 10, 10),
+    commands.spawn((
+            Camera3dBundle {
+                transform: Transform::from_xyz(0.0, 32.0, 0.0),
+                ..default()
+            },
+            ChunkAnchor::<WorldGenAnchor>::new(
+                world_id,
+                UVec3::new(10, 10, 10),
+            ),
+            ChunkAnchor::<RemeshAnchor>::new(
+                world_id,
+                UVec3::new(10, 10, 10),
+            )
         ));
 }

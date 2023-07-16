@@ -14,7 +14,7 @@ keywords = ["bones3"]
 default = []
 
 [dependencies]
-bevy = { version = "0.10.1", default-features = false, features = ["bevy_render", "bevy_asset", "bevy_pbr"] }
+bevy = { version = "0.11.0", default-features = false, features = ["bevy_render", "bevy_asset", "bevy_pbr"] }
 bitflags = "2.2.1"
 bones3_core = { path = "../bones3_core", version = "0.4.0" }
 ordered-float = "3.7.0"
