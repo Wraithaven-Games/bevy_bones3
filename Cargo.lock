@@ -865,7 +865,6 @@ name = "bones3_core"
 version = "0.4.0"
 dependencies = [
  "bevy",
- "bones3_test_utils",
  "pretty_assertions",
  "thiserror",
 ]
@@ -877,18 +876,10 @@ dependencies = [
  "bevy",
  "bitflags 2.3.3",
  "bones3_core",
- "bones3_test_utils",
  "ordered-float",
  "pretty_assertions",
  "priority-queue",
  "thiserror",
-]
-
-[[package]]
-name = "bones3_test_utils"
-version = "0.4.0"
-dependencies = [
- "bevy",
 ]
 
 [[package]]
