@@ -310,7 +310,7 @@ dependencies = [
 
 [[package]]
 name = "bevy_bones3"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "bevy",
  "bones3_core",
@@ -862,7 +862,7 @@ dependencies = [
 
 [[package]]
 name = "bones3_core"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "bevy",
  "pretty_assertions",
@@ -871,7 +871,7 @@ dependencies = [
 
 [[package]]
 name = "bones3_remesh"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "bevy",
  "bitflags 2.3.3",
@@ -884,7 +884,7 @@ dependencies = [
 
 [[package]]
 name = "bones3_worldgen"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "bevy",
  "bones3_core",
