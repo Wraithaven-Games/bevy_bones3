@@ -13,13 +13,16 @@ categories = ["games", "game-engines"]
 exclude = [".github/", "crates/"]
 
 [dependencies]
-bevy = { version = "0.11.0", default-features = false, features = ["bevy_core_pipeline"] }
+bevy = { version = "0.11.0", default-features = false, features = [] }
 bones3_core = { path = "crates/bones3_core", version = "0.5.0" }
 bones3_remesh = { path = "crates/bones3_remesh", version = "0.5.0", optional = true }
 bones3_worldgen = { path = "crates/bones3_worldgen", version = "0.5.0", optional = true }
+thiserror = "1.0.44"
 
 [dev-dependencies]
+bevy = { version = "0.11.0", default-features = true }
 rand = "0.8.5"
+pretty_assertions = "1.3.0"
 
 [profile.dev]
 opt-level = 1
@@ -28,10 +31,7 @@ opt-level = 1
 opt-level = 3
 
 [features]
-default = [
-  "meshing",
-  "worldgen"
-]
+default = ["meshing", "worldgen"]
 meshing = [
   "bones3_remesh",
   "bevy/bevy_asset",
@@ -41,11 +41,9 @@ meshing = [
   "bevy/ktx2",
   "bevy/zstd",
   "bevy/tonemapping_luts",
-  "bones3_worldgen?/meshing"
+  "bones3_worldgen?/meshing",
 ]
-worldgen = [
-  "bones3_worldgen"
-]
+worldgen = ["bones3_worldgen"]
 
 [workspace]
 members = ["crates/*"]

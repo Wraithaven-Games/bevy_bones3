@@ -7,6 +7,7 @@
 #![warn(rustdoc::invalid_codeblock_attributes)]
 #![warn(rustdoc::invalid_html_tags)]
 
+pub mod math;
 pub mod storage;
 
 pub use bones3_core as core;
