@@ -7,6 +7,8 @@
 #![warn(rustdoc::invalid_codeblock_attributes)]
 #![warn(rustdoc::invalid_html_tags)]
 
+pub mod storage;
+
 pub use bones3_core as core;
 #[cfg(feature = "meshing")]
 pub use bones3_remesh as remesh;
