@@ -240,7 +240,7 @@ mod test {
             world_b.spawn_chunk(IVec3::ONE, ChunkMarker).unwrap();
             world_b.spawn_chunk(IVec3::NEG_X, ()).unwrap();
         }
-        Schedule::new().add_system(init).run(&mut app.world);
+        Schedule::new().add_systems(init).run(&mut app.world);
 
         fn update(
             world_query: Query<Entity, With<WorldMarker>>,
@@ -254,6 +254,6 @@ mod test {
             assert_eq!(iter.next(), Some(&VoxelChunk::new(world_id, IVec3::ONE)));
             assert_eq!(iter.next(), None);
         }
-        Schedule::new().add_system(update).run(&mut app.world);
+        Schedule::new().add_systems(update).run(&mut app.world);
     }
 }

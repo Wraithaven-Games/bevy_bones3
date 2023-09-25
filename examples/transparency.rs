@@ -12,14 +12,16 @@ use bones3_remesh::Bones3RemeshPlugin;
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
-        .add_plugin(Bones3CorePlugin::<BlockState>::default())
-        .add_plugin(Bones3RemeshPlugin::<BlockState>::default())
-        .add_startup_system(init)
+        .add_plugins((
+            DefaultPlugins,
+            Bones3CorePlugin::<BlockState>::default(),
+            Bones3RemeshPlugin::<BlockState>::default(),
+        ))
+        .add_systems(Startup, init)
         .run();
 }
 
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Reflect, Clone, Copy)]
 pub enum BlockState {
     #[default]
     Empty,
@@ -95,9 +97,9 @@ pub fn init(
         });
 
     let stone_handle = materials.add(Color::GRAY.into());
-    let stone_index = chunk_materials.add_material(stone_handle);
+    let stone_index = chunk_materials.add_material(stone_handle, None);
     let grass_handle = materials.add(Color::DARK_GREEN.into());
-    let grass_index = chunk_materials.add_material(grass_handle);
+    let grass_index = chunk_materials.add_material(grass_handle, None);
     let water_handle = materials.add(
         Color::Rgba {
             red:   0.0,
@@ -107,7 +109,7 @@ pub fn init(
         }
         .into(),
     );
-    let water_index = chunk_materials.add_material(water_handle);
+    let water_index = chunk_materials.add_material(water_handle, None);
 
     let mut world = commands.spawn_world(SpatialBundle::default());
 

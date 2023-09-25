@@ -52,11 +52,11 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
-    - name: Install latest nightly
+    - name: Install nightly-2023-06-15
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: nightly
-        override: true
+        toolchain: nightly-2023-06-15
+        override: false
         components: rustfmt, clippy
 
     - name: Installing needed Ubuntu dependencies
@@ -70,7 +70,7 @@ jobs:
         cargo -V
 
     - name: Verify Formatting
-      run: cargo +nightly fmt --all -- --check
+      run: cargo fmt --all -- --check
 
 
   clippy:
@@ -91,11 +91,11 @@ jobs:
           target/
         key: ${{ runner.os }}-cargo-clippy-${{ hashFiles('**/Cargo.toml') }}
 
-    - name: Install latest nightly
+    - name: Install nightly-2023-06-15
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: nightly
-        override: true
+        toolchain: nightly-2023-06-15
+        override: false
         components: rustfmt, clippy
 
     - name: Installing needed Ubuntu dependencies
@@ -109,7 +109,7 @@ jobs:
         cargo -V
 
     - name: Verify Clippy
-      run: cargo +nightly clippy --all-targets --all-features --workspace -- -D warnings
+      run: cargo clippy --all-targets --all-features --workspace -- -D warnings
 
 
   docs:
@@ -123,7 +123,7 @@ jobs:
       uses: actions-rs/toolchain@v1
       with:
         toolchain: stable
-        override: true
+        override: false
         components: rustfmt, clippy
 
     - name: Installing needed Ubuntu dependencies
